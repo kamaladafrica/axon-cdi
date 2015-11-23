@@ -1,6 +1,6 @@
 # Axon Framework CDI Integration
 
-A CDI Extension that helps [Axon Framework](url "http://www.axonframework.org") and CDI integration.
+A CDI Extension that helps [Axon Framework](http://www.axonframework.org) and CDI integration.
 You only need to @Produces some required instances and annotate them with @Autoconfigure, in order to get Axon Framework up and running in a CDI environment.
 
 ### What you have to do
@@ -24,38 +24,33 @@ You only need to @Produces some required instances and annotate them with @Autoc
 
 ## Usage
 
-You can checkout the [Quickstart project](url "https://github.com/kamaladafrica/axon-cdi-quickstart") for a full working example.
+You can checkout the [Quickstart project](https://github.com/kamaladafrica/axon-cdi-quickstart) for a full working example.
 
 
 ## Getting started
 
-All you need to do is to add the [Jitpack.io](url "https://jitpack.io")  repository in the maven pom.xml
+All you need to do is to add the [Jitpack.io](https://jitpack.io)  repository in the maven pom.xml
 
 
-	<repository>
-		<id>jitpack.io</id>
-		<url>https://jitpack.io</url>
-		<name>Jitpack.io Repository</name>
-		<releases>
-			<enabled>true</enabled>
-		</releases>
-		<snapshots>
-			<enabled>true</enabled>
-		</snapshots>
-	</repository>
-
-
-
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+			<name>Jitpack.io Repository</name>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
 
 and declare the dependency
 
-
-
-	<dependency>
-	  <groupId>com.github.kamaladafrica</groupId>
-	  <artifactId>axon-cdi</artifactId>
-	  <version>${version}</version>
-	</dependency>
+		<dependency>
+		  <groupId>com.github.kamaladafrica</groupId>
+		  <artifactId>axon-cdi</artifactId>
+		  <version>${version}</version>
+		</dependency>
 
 For the very last version you can write `<version>master</version>`
  
