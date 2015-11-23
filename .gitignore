@@ -1,0 +1,10 @@
+target/
+.settings/
+.idea/
+.externalToolBuilders/
+.project
+.classpath
+*.iml
+.factorypath
+.DS_Store
+.*._trace
