@@ -1,9 +1,14 @@
 package org.axonframework.integration.cdi;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.enterprise.util.TypeLiteral;
+
+import org.apache.deltaspike.core.util.ExceptionUtils;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.domain.AggregateRoot;
@@ -71,6 +76,22 @@ public class AxonUtils {
 		return result.get();
 	}
 
+	public static <T> TypeLiteral<T> asTypeLiteral(Type type) {
+		@SuppressWarnings("serial")
+		TypeLiteral<T> literal = new TypeLiteral<T>() {};
+		for (Field field : TypeLiteral.class.getDeclaredFields()) {
+			if (field.getType().equals(Type.class)) {
+				try {
+					field.setAccessible(true);
+					field.set(literal, type);
+				} catch (IllegalArgumentException | IllegalAccessException e) {
+					ExceptionUtils.throwAsRuntimeException(e);
+				}
+			}
+		}
+		return literal;
+	}
+
 	private static final class HasCommandHandlerAnnotationMethodCallback implements
 			MethodCallback {
 
@@ -86,7 +107,8 @@ public class AxonUtils {
 		@Override
 		public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
 			if (method
-					.isAnnotationPresent(org.axonframework.commandhandling.annotation.CommandHandler.class)) {
+					.isAnnotationPresent(
+							org.axonframework.commandhandling.annotation.CommandHandler.class)) {
 				result.set(true);
 			}
 		}
@@ -127,8 +149,7 @@ public class AxonUtils {
 		}
 		if (clazz.getSuperclass() != null) {
 			doWithMethods(clazz.getSuperclass(), mc);
-		}
-		else if (clazz.isInterface()) {
+		} else if (clazz.isInterface()) {
 			for (Class<?> superIfc : clazz.getInterfaces()) {
 				doWithMethods(superIfc, mc);
 			}
@@ -136,6 +157,7 @@ public class AxonUtils {
 	}
 
 	private interface MethodCallback {
+
 		void doWith(Method method) throws IllegalArgumentException, IllegalAccessException;
 	}
 

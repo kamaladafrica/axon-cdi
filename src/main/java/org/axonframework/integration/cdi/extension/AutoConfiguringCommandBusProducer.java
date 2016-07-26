@@ -9,6 +9,7 @@ import javax.enterprise.inject.spi.CDI;
 import javax.enterprise.inject.spi.Producer;
 import javax.enterprise.util.TypeLiteral;
 
+import org.apache.deltaspike.core.api.literal.AnyLiteral;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.annotation.AggregateAnnotationCommandHandler;
 import org.axonframework.commandhandling.annotation.AnnotationCommandHandlerAdapter;
@@ -54,7 +55,7 @@ public class AutoConfiguringCommandBusProducer<X extends CommandBus> extends
 				.current().select(
 						repositoryType, getQualifiers());
 		if (repositoryInstances.isUnsatisfied()) {
-			repositoryInstances = CDI.current().select(repositoryType);
+			repositoryInstances = CDI.current().select(repositoryType, new AnyLiteral());
 		}
 		for (EventSourcingRepository<? extends EventSourcedAggregateRoot<?>> repository : repositoryInstances) {
 			subscribe(repository, commandBus);

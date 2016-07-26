@@ -1,14 +1,21 @@
 package org.axonframework.integration.cdi.extension;
 
+import static org.apache.commons.lang3.reflect.TypeUtils.parameterize;
+import static org.axonframework.integration.cdi.AxonUtils.asTypeLiteral;
+
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.List;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.CDI;
+import javax.enterprise.util.TypeLiteral;
 
 import org.apache.deltaspike.core.util.metadata.builder.ContextualLifecycle;
 import org.axonframework.eventhandling.EventBus;
+import org.axonframework.eventsourcing.AggregateFactory;
 import org.axonframework.eventsourcing.ConflictResolver;
 import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
 import org.axonframework.eventsourcing.EventSourcingRepository;
@@ -31,7 +38,14 @@ public class RepositoryContextualLifecycle<T extends EventSourcedAggregateRoot<?
 				new Annotation[bean.getQualifiers().size()]);
 		Instance<Object> instances = CDI.current();
 		EventStore eventStore = instances.select(EventStore.class, qualifiers).get();
-		R repository = (R) new EventSourcingRepository<T>(aggregateRootClass, eventStore);
+		
+		R repository;
+		AggregateFactory<T> aggregateFactory = selectAggregateFactory(qualifiers);
+		if(aggregateFactory == null){
+			repository = (R) new EventSourcingRepository<T>(aggregateRootClass, eventStore);			
+		} else {
+			repository = (R) new EventSourcingRepository<T>(aggregateFactory, eventStore);
+		}
 
 		Instance<EventBus> eventBus = instances.select(EventBus.class, qualifiers);
 		if (!eventBus.isUnsatisfied()) {
@@ -51,6 +65,14 @@ public class RepositoryContextualLifecycle<T extends EventSourcedAggregateRoot<?
 		}
 
 		return repository;
+	}
+
+	private AggregateFactory<T> selectAggregateFactory(Annotation... qualifiers) {
+		TypeLiteral<AggregateFactory<T>> type = asTypeLiteral(
+				parameterize(AggregateFactory.class, aggregateRootClass));
+		Instance<AggregateFactory<T>> instances = CDI.current().select(type,
+				qualifiers);
+		return instances.isUnsatisfied() ? null : instances.get();
 	}
 
 	@Override
