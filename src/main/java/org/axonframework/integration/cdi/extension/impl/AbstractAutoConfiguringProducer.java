@@ -1,10 +1,11 @@
-package org.axonframework.integration.cdi.extension;
+package org.axonframework.integration.cdi.extension.impl;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.AnnotatedMember;
+import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.Producer;

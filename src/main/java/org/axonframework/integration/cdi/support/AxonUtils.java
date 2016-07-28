@@ -1,4 +1,4 @@
-package org.axonframework.integration.cdi;
+package org.axonframework.integration.cdi.support;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;

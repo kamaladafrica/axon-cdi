@@ -1,32 +1,32 @@
-package org.axonframework.integration.cdi.extension;
+package org.axonframework.integration.cdi.extension.impl;
 
-import java.util.List;
+import java.lang.reflect.Type;
+import java.util.Set;
 
-import javax.enterprise.inject.Instance;
 import javax.enterprise.inject.spi.AnnotatedMember;
+import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.CDI;
 import javax.enterprise.inject.spi.Producer;
 import javax.enterprise.util.TypeLiteral;
 
-import org.apache.deltaspike.core.api.literal.AnyLiteral;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.annotation.AggregateAnnotationCommandHandler;
 import org.axonframework.commandhandling.annotation.AnnotationCommandHandlerAdapter;
 import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
 import org.axonframework.eventsourcing.EventSourcingRepository;
+import org.axonframework.integration.cdi.support.CdiUtils;
 
 public class AutoConfiguringCommandBusProducer<X extends CommandBus> extends
 		AbstractAutoConfiguringProducer<X> {
 
-	private final List<Class<?>> handlerClasses;
+	private final Set<HandlerInfo> handlers;
 
 	public AutoConfiguringCommandBusProducer(Producer<X> wrappedProducer,
 			AnnotatedMember<?> annotatedMember,
-			List<Class<?>> handlerClasses,
+			Set<HandlerInfo> handlers,
 			BeanManager beanManager) {
 		super(wrappedProducer, annotatedMember, beanManager);
-		this.handlerClasses = handlerClasses;
+		this.handlers = handlers;
 	}
 
 	@Override
@@ -37,29 +37,21 @@ public class AutoConfiguringCommandBusProducer<X extends CommandBus> extends
 	}
 
 	private void registerCommandHandlers(X commandBus) {
-		for (Class<?> handlerClass : handlerClasses) {
-			Instance<?> handlerInstances = CDI.current().select(handlerClass, getQualifiers());
-			if (handlerInstances.isUnsatisfied()) {
-				handlerInstances = CDI.current().select(handlerClass);
-			}
-			Object handler = handlerInstances.get();
-			AnnotationCommandHandlerAdapter.subscribe(handler, commandBus);
+		for (HandlerInfo handler : handlers) {
+			AnnotationCommandHandlerAdapter.subscribe(handler.getReference(getBeanManager()),
+					commandBus);
 		}
 	}
 
+	@SuppressWarnings({ "unchecked", "serial" })
 	protected void registerRepositories(X commandBus) {
-
-		@SuppressWarnings("serial")
-		TypeLiteral<EventSourcingRepository<? extends EventSourcedAggregateRoot<?>>> repositoryType = new TypeLiteral<EventSourcingRepository<? extends EventSourcedAggregateRoot<?>>>() {};
-		Instance<EventSourcingRepository<? extends EventSourcedAggregateRoot<?>>> repositoryInstances = CDI
-				.current().select(
-						repositoryType, getQualifiers());
-		if (repositoryInstances.isUnsatisfied()) {
-			repositoryInstances = CDI.current().select(repositoryType, new AnyLiteral());
-		}
-		for (EventSourcingRepository<? extends EventSourcedAggregateRoot<?>> repository : repositoryInstances) {
+		TypeLiteral<EventSourcingRepository<? extends EventSourcedAggregateRoot<?>>> repositoryTypeLiteral = new TypeLiteral<EventSourcingRepository<? extends EventSourcedAggregateRoot<?>>>() {};
+		Type repositoryType = repositoryTypeLiteral.getType();
+		Set<Bean<?>> repositoryBeans = getBeanManager().getBeans(repositoryType, getQualifiers());
+		for (Bean<?> bean : repositoryBeans) {
+			EventSourcingRepository<? extends EventSourcedAggregateRoot<?>> repository = (EventSourcingRepository<? extends EventSourcedAggregateRoot<?>>) CdiUtils
+					.getReference(getBeanManager(), bean, repositoryType);
 			subscribe(repository, commandBus);
-
 		}
 	}
 

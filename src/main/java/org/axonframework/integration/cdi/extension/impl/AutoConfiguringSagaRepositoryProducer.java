@@ -1,6 +1,5 @@
-package org.axonframework.integration.cdi.extension;
+package org.axonframework.integration.cdi.extension.impl;
 
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 import javax.enterprise.inject.CreationException;
@@ -9,7 +8,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Producer;
 
 import org.apache.commons.lang3.reflect.MethodUtils;
-import org.axonframework.integration.cdi.CdiResourceInjector;
+import org.axonframework.integration.cdi.support.CdiResourceInjector;
 import org.axonframework.saga.ResourceInjector;
 import org.axonframework.saga.SagaRepository;
 
@@ -30,8 +29,8 @@ public class AutoConfiguringSagaRepositoryProducer<X extends SagaRepository> ext
 				ResourceInjector.class);
 		if (setter != null) {
 			try {
-				setter.invoke(repository, new CdiResourceInjector());
-			} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+				setter.invoke(repository, new CdiResourceInjector(getBeanManager()));
+			} catch (ReflectiveOperationException e) {
 				throw new CreationException(e);
 			}
 		}
