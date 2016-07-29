@@ -9,7 +9,6 @@ You only need to @Produces some required instances and annotate them with @Autoc
 * Write producer methods for CommandBus, EventBus, EventStore and SagaRepository.
 * Annotate producer methods whith @AutoConfigure
 * Optionally you can write producer for Snapshotter and SnapshotterTrigger
-* Optionally you can write producer for TransactionManager
 
 ### What you get
 * An instance of EventSourcingRepository for every aggregate root
@@ -17,16 +16,131 @@ You only need to @Produces some required instances and annotate them with @Autoc
 * Every command handler registered with command bus
 * Every event listenerr registered with event bus
 * Every saga registered with saga manager
-* If you don't provide a SagaFactory, a GenericSagaFactory configured with a configured CDI resource injector will be used
+* If you don't provide a SagaFactory, a CdiSagaFactory will be used
 * If a SnapshotterTrigger is provided, it will be registered with repositories
-* If a Snapshotter is provided, it will be configured
-* If a TransactionManager is provided, it is used to configure the Snaphotter
+* If a Snapshotter is provided, aggregate factories will be registered with snapshotter
 
 ## Usage
 
 You can checkout the [Quickstart project](https://github.com/kamaladafrica/axon-cdi-quickstart) for a full working example.
 
+### Simple usage
+Annotate your command bus, event bus and snapshotter producers with `@AutoConfigure`. Aggregate roots and sagas don't need to be annotated.
+As result you get:
+* An AggregateRepository for every aggregate root created, configured with EventStore, SnapshotterTrigger, ConflictResolver and registered with event bus 
+* Aggregate roots registered with command bus
+* Event handlers registered with event bus
+* Command handlers registered with command bus
+* Aggregate factories registered with snapshotter
+* SagaManager created, configured with AnnotatedSaga and registered with event bus
+* A CDI capable SagaFactory created
 
+### Advanced usage
+
+There are available two annotations that allow you to customize configuration: `@AggregateConfiguration` and `@SagaConfiguration`.
+Both work thanks to memes, but...
+
+#### What is a "**meme**"?
+
+A **meme** is a type (an interface is recommended, but it can be a class) which is annotated with cdi qualifiers. 
+the "meme" concept is introducted to bypass some limitation of annotation declarations.
+For example, if we have the qualifier @MyAwesomeQualifier, a meme can be decalred as
+```java
+@MyAwesomeQualifier
+public class interface MyAwesomeQualifierMeme {}
+```
+Meme allows CDI extension to capture the exact qualifier instances.
+Memes can declare qualifiers complex as you need
+```java
+@MyAwesomeQualifier @MyWonderfulQualifier(value="Yes! I'm the best") 
+public class interface MyAwesomeQualifierMeme {}
+```
+
+#### Aggregate root configuration
+
+Suppose you have in your application a single command bus, but two event bus, one to dispatch and store events in a database for the aggregate A, and one to store events in a different database for the aggregate B.
+Then we need at least a qualifier annotation in order to distinguish the event bus configurations.
+How do you tell Axon that aggregate A should use event bus A and aggregate B the event bus B? By configuring axon-cdi as follow:
+
+CDIConfiguration.java
+```java
+	@Produces
+	@AutoConfigure
+	@ApplicationScoped
+	public CommandBus commandBus() {...}
+
+	@Produces
+	@AutoConfigure
+	@ApplicationScoped
+	public EventBus eventBusAggregateA() {...}
+
+	@Produces
+	@AutoConfigure
+	@AggregateBQualifier
+	@ApplicationScoped
+	public EventBus eventBusAggregateB() {...}
+
+	@Produces
+	@AutoConfigure
+	@ApplicationScoped
+	public EventStore eventStoreAggregateA() {...}
+
+	@Produces
+	@AutoConfigure
+	@AggregateBQualifier
+	@ApplicationScoped
+	public EventStore eventStoreAggregateB() {...}
+
+```
+AggregateBQualifierMeme.java
+```java
+@AggregateBQualifier
+public interface AggregateBQualifierMeme {}
+```
+AggregateA.java
+```java
+public class AggregateA extends AbstractAnnotatedAggregateRoot<String>
+```
+AggregateB.java
+```java
+@AggregateConfiguration(
+		value = AggregateBQualifierMeme.class, 
+		commandBus = DefaultQualifierMeme.class, 
+		snapshotter = DefaultQualifierMeme.class, 
+		snapshotterTrigger = DefaultQualifierMeme.class
+)
+public class AggregateB extends AbstractAnnotatedAggregateRoot<String>
+```
+
+In this way you tell axon-cdi to register the AggregateB with:
+* Event bus qualified with @AggregateBQualifier
+* EventStore qualified with @AggregateBQualifier
+* ConflictResolver qualified with @AggregateBQualifier
+* CommandBus with no qualifier
+* Snapshotter with no qualifier
+* SnapshotterTrigger with no qualifier
+
+*NB. CDI specification states that beans with no qualifiers are implicitly qualified with @Default (in addition to @Any)*
+
+In order to make code clean, stereotypes are supported so you can annotate you aggregate root with @AggregateBStereotype declared as follow
+```java
+@AggregateConfiguration(
+		value = AggregateBQualifierMeme.class, 
+		commandBus = DefaultQualifierMeme.class, 
+		snapshotter = DefaultQualifierMeme.class, 
+		snapshotterTrigger = DefaultQualifierMeme.class
+)
+@Stereotype
+@Retention(RUNTIME)
+@Target(TYPE)
+public @interface AggregateBStereotype {
+```
+and your AggregateB
+```java
+@AggregateBStereotype
+public class AggregateB extends AbstractAnnotatedAggregateRoot<String>
+```
+<!---
 ## Getting started
 
 All you need to do is to add the [Jitpack.io](https://jitpack.io)  repository in the maven pom.xml
@@ -53,7 +167,7 @@ and declare the dependency
 		</dependency>
 
 For the very last version you can write `<version>master</version>`
- 
+ --->
 
 ## Contributing
 
