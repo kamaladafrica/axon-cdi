@@ -1,5 +1,7 @@
 package org.axonframework.integration.cdi.extension.impl;
 
+import static org.axonframework.integration.cdi.support.CdiUtils.normalizedQualifiers;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
@@ -11,6 +13,7 @@ import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.Producer;
 
 import org.apache.deltaspike.core.util.BeanUtils;
+import org.axonframework.integration.cdi.support.CdiUtils;
 
 public abstract class AbstractAutoConfiguringProducer<X> implements Producer<X> {
 
@@ -59,8 +62,8 @@ public abstract class AbstractAutoConfiguringProducer<X> implements Producer<X> 
 	}
 
 	protected Annotation[] getQualifiers() {
-		Set<Annotation> qualifiers = BeanUtils.getQualifiers(beanManager,
-				annotatedMember.getAnnotations());
+		Set<Annotation> qualifiers = normalizedQualifiers(
+				BeanUtils.getQualifiers(beanManager, annotatedMember.getAnnotations()));
 		return qualifiers.toArray(new Annotation[qualifiers.size()]);
 	}
 

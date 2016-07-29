@@ -6,6 +6,8 @@ import java.util.Arrays;
 import java.util.Set;
 
 import javax.enterprise.context.spi.CreationalContext;
+import javax.enterprise.inject.Any;
+import javax.enterprise.inject.Default;
 import javax.enterprise.inject.spi.Annotated;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
@@ -20,7 +22,6 @@ import org.axonframework.integration.cdi.DefaultQualifier;
 import org.axonframework.integration.cdi.InheritQualifiers;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSet.Builder;
 import com.google.common.collect.Iterables;
 
 public final class CdiUtils {
@@ -52,15 +53,29 @@ public final class CdiUtils {
 		return normalizedQualifiers(qualifiers).equals(normalizedQualifiers(otherQualifiers));
 	}
 
+	private static final Any ANY_LITERAL = new AnyLiteral();
+
+	private static final Default DEFAULT_LITERAL = new DefaultLiteral();
+
+	private static final Set<Annotation> DEFAULT_QUALIFIERS = ImmutableSet
+			.<Annotation> of(DEFAULT_LITERAL, ANY_LITERAL);
+
 	public static Set<Annotation> normalizedQualifiers(Set<Annotation> qualifiers) {
-		Builder<Annotation> builder = ImmutableSet.builder();
-		if (qualifiers.isEmpty()) {
-			builder.add(new DefaultLiteral());
-		} else {
-			builder.addAll(qualifiers);
+		switch (qualifiers.size()) {
+		case 0:
+			return DEFAULT_QUALIFIERS;
+		case 1:
+			if (qualifiers.contains(ANY_LITERAL)) {
+				return DEFAULT_QUALIFIERS;
+			}
+			break;
+		case 2:
+			if(DEFAULT_QUALIFIERS.equals(qualifiers)){
+				return DEFAULT_QUALIFIERS;
+			}
+			break;
 		}
-		builder.add(new AnyLiteral());
-		return builder.build();
+		return ImmutableSet.<Annotation> builder().addAll(qualifiers).add(ANY_LITERAL).build();
 	}
 
 	public static boolean isDefaultMarker(Class<?> marker) {

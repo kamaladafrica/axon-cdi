@@ -18,6 +18,7 @@ import org.axonframework.eventsourcing.EventSourcingRepository;
 import org.axonframework.integration.cdi.extension.impl.AggregateRootInfo.QualifierType;
 import org.axonframework.integration.cdi.support.CdiUtils;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 
@@ -79,12 +80,10 @@ public class AutoConfiguringAggregateSnapshotter<X extends AbstractSnapshotter> 
 	@SuppressWarnings("unchecked")
 	private <T extends EventSourcedAggregateRoot<?>> void registerAggregateFactories(
 			AggregateSnapshotter snapshotter) {
-		Set<Annotation> qualifiers = Sets.newHashSet(getQualifiers());
+		Set<Annotation> qualifiers = ImmutableSet.copyOf(getQualifiers());
 		List<AggregateFactory<?>> factories = Lists.newArrayList();
 		for (AggregateRootInfo aggregateRoot : aggregateRoots) {
-			Set<Annotation> requestedQualifiers = aggregateRoot
-					.getQualifiers(QualifierType.SNAPSHOTTER);
-			if (qualifiers.equals(requestedQualifiers)) {
+			if (aggregateRoot.matchQualifiers(QualifierType.SNAPSHOTTER, qualifiers)) {
 				Set<Annotation> factoryQualifiers = aggregateRoot
 						.getQualifiers(QualifierType.REPOSITORY);
 				Type type = TypeUtils.parameterize(EventSourcingRepository.class,

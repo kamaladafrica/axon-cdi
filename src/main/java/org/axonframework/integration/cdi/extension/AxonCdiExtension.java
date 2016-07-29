@@ -35,6 +35,7 @@ import org.axonframework.integration.cdi.AggregateConfiguration;
 import org.axonframework.integration.cdi.AutoConfigure;
 import org.axonframework.integration.cdi.SagaConfiguration;
 import org.axonframework.integration.cdi.extension.impl.AggregateRootInfo;
+import org.axonframework.integration.cdi.extension.impl.AggregateRootInfo.QualifierType;
 import org.axonframework.integration.cdi.extension.impl.AutoConfiguringAggregateSnapshotter;
 import org.axonframework.integration.cdi.extension.impl.AutoConfiguringCommandBusProducer;
 import org.axonframework.integration.cdi.extension.impl.AutoConfiguringEventBusProducer;
@@ -114,7 +115,7 @@ public class AxonCdiExtension implements Extension {
 		if (annotatedMember.isAnnotationPresent(AutoConfigure.class)) {
 			Producer<X> originalProducer = processProducer.getProducer();
 			Producer<X> producer = new AutoConfiguringCommandBusProducer<>(originalProducer,
-					annotatedMember, getCommandHandlers(), beanManager);
+					annotatedMember, getAggregateRoots(), getCommandHandlers(), beanManager);
 			processProducer.setProducer(producer);
 		}
 	}
@@ -129,7 +130,7 @@ public class AxonCdiExtension implements Extension {
 		if (annotatedMember.isAnnotationPresent(AutoConfigure.class)) {
 			Producer<X> originalProducer = processProducer.getProducer();
 			Producer<X> producer = new AutoConfiguringEventBusProducer<>(originalProducer,
-					annotatedMember, getEventHandlers(), beanManager);
+					annotatedMember, getEventHandlers(), getSagas(), beanManager);
 			processProducer.setProducer(producer);
 		}
 	}
@@ -199,7 +200,8 @@ public class AxonCdiExtension implements Extension {
 		BeanBuilder<EventSourcingRepository<T>> builder = new BeanBuilder<EventSourcingRepository<T>>(
 				bm)
 						.beanClass(EventSourcingRepository.class)
-						.qualifiers(aggregateRootBean.getQualifiers())
+						.qualifiers(normalizedQualifiers(
+								aggregateRoot.getQualifiers(QualifierType.REPOSITORY)))
 						.alternative(aggregateRootBean.isAlternative())
 						.nullable(aggregateRootBean.isNullable())
 						.types(typeClosure(type))
@@ -208,7 +210,7 @@ public class AxonCdiExtension implements Extension {
 						.beanLifecycle(
 								new RepositoryContextualLifecycle<T, EventSourcingRepository<T>>(bm,
 										aggregateRoot));
-		
+
 		if (!Strings.isNullOrEmpty(aggregateRootBean.getName())) {
 			builder.name(aggregateRootBean.getName() + "Repository");
 		}

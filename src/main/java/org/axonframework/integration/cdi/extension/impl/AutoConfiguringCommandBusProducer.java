@@ -1,32 +1,41 @@
 package org.axonframework.integration.cdi.extension.impl;
 
-import java.lang.reflect.Type;
+import static com.google.common.collect.ImmutableSet.copyOf;
+import static org.apache.commons.lang3.reflect.TypeUtils.parameterize;
+import static org.axonframework.commandhandling.annotation.AggregateAnnotationCommandHandler.subscribe;
+import static org.axonframework.integration.cdi.extension.impl.AggregateRootInfo.QualifierType.COMMAND_BUS;
+import static org.axonframework.integration.cdi.extension.impl.AggregateRootInfo.QualifierType.REPOSITORY;
+import static org.axonframework.integration.cdi.support.CdiUtils.getReference;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.util.Set;
 
 import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Producer;
-import javax.enterprise.util.TypeLiteral;
 
 import org.axonframework.commandhandling.CommandBus;
-import org.axonframework.commandhandling.annotation.AggregateAnnotationCommandHandler;
 import org.axonframework.commandhandling.annotation.AnnotationCommandHandlerAdapter;
 import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
 import org.axonframework.eventsourcing.EventSourcingRepository;
-import org.axonframework.integration.cdi.support.CdiUtils;
 
 public class AutoConfiguringCommandBusProducer<X extends CommandBus> extends
 		AbstractAutoConfiguringProducer<X> {
 
 	private final Set<HandlerInfo> handlers;
 
+	private final Set<AggregateRootInfo> aggregateRoots;
+
 	public AutoConfiguringCommandBusProducer(Producer<X> wrappedProducer,
 			AnnotatedMember<?> annotatedMember,
+			Set<AggregateRootInfo> aggregateRoots,
 			Set<HandlerInfo> handlers,
 			BeanManager beanManager) {
 		super(wrappedProducer, annotatedMember, beanManager);
 		this.handlers = handlers;
+		this.aggregateRoots = aggregateRoots;
 	}
 
 	@Override
@@ -38,27 +47,27 @@ public class AutoConfiguringCommandBusProducer<X extends CommandBus> extends
 
 	private void registerCommandHandlers(X commandBus) {
 		for (HandlerInfo handler : handlers) {
-			AnnotationCommandHandlerAdapter.subscribe(handler.getReference(getBeanManager()),
-					commandBus);
+			Set<Bean<?>> beans = getBeanManager().getBeans(handler.getType(), getQualifiers());
+			Bean<?> bean = getBeanManager().resolve(beans);
+			if (bean != null) {
+				AnnotationCommandHandlerAdapter.subscribe(handler.getReference(getBeanManager()),
+						commandBus);
+			}
 		}
 	}
 
-	@SuppressWarnings({ "unchecked", "serial" })
-	protected void registerRepositories(X commandBus) {
-		TypeLiteral<EventSourcingRepository<? extends EventSourcedAggregateRoot<?>>> repositoryTypeLiteral = new TypeLiteral<EventSourcingRepository<? extends EventSourcedAggregateRoot<?>>>() {};
-		Type repositoryType = repositoryTypeLiteral.getType();
-		Set<Bean<?>> repositoryBeans = getBeanManager().getBeans(repositoryType, getQualifiers());
-		for (Bean<?> bean : repositoryBeans) {
-			EventSourcingRepository<? extends EventSourcedAggregateRoot<?>> repository = (EventSourcingRepository<? extends EventSourcedAggregateRoot<?>>) CdiUtils
-					.getReference(getBeanManager(), bean, repositoryType);
-			subscribe(repository, commandBus);
+	@SuppressWarnings({ "unchecked" })
+	protected <T extends EventSourcedAggregateRoot<?>> void registerRepositories(X commandBus) {
+		final Set<Annotation> qualifiers = copyOf(getQualifiers());
+		for (AggregateRootInfo aggregateRoot : aggregateRoots) {
+			if (aggregateRoot.matchQualifiers(COMMAND_BUS, qualifiers)) {
+				Class<T> aggregateType = (Class<T>) aggregateRoot.getType();
+				ParameterizedType repositoryType = parameterize(EventSourcingRepository.class,
+						aggregateType);
+				EventSourcingRepository<T> repository = (EventSourcingRepository<T>) getReference(
+						getBeanManager(), repositoryType, aggregateRoot.getQualifiers(REPOSITORY));
+				subscribe(aggregateType, repository, commandBus);
+			}
 		}
 	}
-
-	private <T extends EventSourcedAggregateRoot<?>> void subscribe(
-			EventSourcingRepository<T> repository, X commandBus) {
-		AggregateAnnotationCommandHandler.subscribe(repository.getAggregateFactory()
-				.getAggregateType(), repository, commandBus);
-	}
-
 }

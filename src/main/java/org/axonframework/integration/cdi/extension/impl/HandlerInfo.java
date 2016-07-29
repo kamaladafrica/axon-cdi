@@ -1,9 +1,10 @@
 package org.axonframework.integration.cdi.extension.impl;
 
+import static java.util.Collections.unmodifiableSet;
+import static org.axonframework.integration.cdi.support.CdiUtils.normalizedQualifiers;
 import static org.axonframework.integration.cdi.support.CdiUtils.qualifiers;
 
 import java.lang.annotation.Annotation;
-import java.util.Collections;
 import java.util.Set;
 
 import javax.enterprise.inject.spi.AnnotatedType;
@@ -23,14 +24,14 @@ public class HandlerInfo extends AxonConfigInfo {
 	private HandlerInfo(Class<?> type, Set<Annotation> qualifiers, boolean eventHandler) {
 		super(type);
 		ensureHandlerType(eventHandler, type);
-		this.qualifiers = Collections.unmodifiableSet(qualifiers);
+		this.qualifiers = unmodifiableSet(normalizedQualifiers(qualifiers));
 		this.eventHandler = eventHandler;
 	}
 
 	private HandlerInfo(Bean<?> bean, Set<Annotation> qualifiers, boolean eventHandler) {
 		super(bean);
 		ensureHandlerType(eventHandler, bean.getBeanClass());
-		this.qualifiers = Collections.unmodifiableSet(qualifiers);
+		this.qualifiers = unmodifiableSet(normalizedQualifiers(qualifiers));
 		this.eventHandler = eventHandler;
 	}
 

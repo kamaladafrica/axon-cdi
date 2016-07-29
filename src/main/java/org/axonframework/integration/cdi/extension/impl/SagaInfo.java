@@ -1,6 +1,9 @@
 package org.axonframework.integration.cdi.extension.impl;
 
+import static com.google.common.collect.Maps.newHashMap;
+import static com.google.common.collect.Maps.transformValues;
 import static org.axonframework.integration.cdi.support.CdiUtils.isInheritMarker;
+import static org.axonframework.integration.cdi.support.CdiUtils.normalizedQualifiers;
 import static org.axonframework.integration.cdi.support.CdiUtils.qualifiers;
 
 import java.lang.annotation.Annotation;
@@ -15,8 +18,10 @@ import javax.enterprise.inject.spi.BeanManager;
 
 import org.axonframework.integration.cdi.AggregateConfiguration;
 import org.axonframework.integration.cdi.SagaConfiguration;
+import org.axonframework.integration.cdi.extension.impl.AggregateRootInfo.QualifierType;
 import org.axonframework.integration.cdi.support.AxonUtils;
 
+import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
 public class SagaInfo extends AxonConfigInfo {
@@ -114,7 +119,17 @@ public class SagaInfo extends AxonConfigInfo {
 				qualifiers.put(type, defaultQualifiers);				
 			}
 		}
-		return qualifiers;
+		return normalizeQualifiers(qualifiers);
+	}
+	private static Map<QualifierType, Set<Annotation>> normalizeQualifiers(
+			Map<QualifierType, Set<Annotation>> map) {
+		return newHashMap(transformValues(map, new Function<Set<Annotation>, Set<Annotation>>() {
+
+			@Override
+			public Set<Annotation> apply(Set<Annotation> input) {
+				return normalizedQualifiers(input);
+			}
+		}));
 	}
 
 	private static Map<? extends QualifierType, ? extends Set<Annotation>> extractQualifiers(

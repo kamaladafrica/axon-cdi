@@ -1,5 +1,10 @@
 package org.axonframework.integration.cdi.extension.impl;
 
+import static org.axonframework.eventhandling.annotation.AnnotationEventListenerAdapter.subscribe;
+import static org.axonframework.integration.cdi.support.CdiUtils.getBeans;
+import static org.axonframework.integration.cdi.support.CdiUtils.getReference;
+
+import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import javax.enterprise.inject.spi.AnnotatedMember;
@@ -8,22 +13,26 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Producer;
 
 import org.axonframework.eventhandling.EventBus;
-import org.axonframework.eventhandling.EventListener;
-import org.axonframework.eventhandling.annotation.AnnotationEventListenerAdapter;
 import org.axonframework.integration.cdi.support.CdiUtils;
 import org.axonframework.saga.SagaManager;
+
+import com.google.common.collect.ImmutableSet;
 
 public class AutoConfiguringEventBusProducer<X extends EventBus> extends
 		AbstractAutoConfiguringProducer<X> {
 
 	private final Set<HandlerInfo> handlers;
 
+	private final Set<SagaManagerInfo> sagaManagers;
+
 	public AutoConfiguringEventBusProducer(Producer<X> wrappedProducer,
 			AnnotatedMember<?> annotatedMember,
 			Set<HandlerInfo> handlers,
+			Set<SagaInfo> sagas,
 			BeanManager beanManager) {
 		super(wrappedProducer, annotatedMember, beanManager);
 		this.handlers = handlers;
+		this.sagaManagers = SagaManagerInfo.from(sagas);
 	}
 
 	@Override
@@ -35,17 +44,26 @@ public class AutoConfiguringEventBusProducer<X extends EventBus> extends
 
 	private void registerEventHandlers(X eventBus) {
 		for (HandlerInfo handler : handlers) {
-			AnnotationEventListenerAdapter.subscribe(handler.getReference(getBeanManager()),
-					eventBus);
+			Set<Bean<?>> beans = getBeanManager().getBeans(handler.getType(), getQualifiers());
+			Bean<?> bean = getBeanManager().resolve(beans);
+			if (bean != null) {
+				subscribe(handler.getReference(getBeanManager()), eventBus);
+			}
 		}
 	}
 
 	private void registerSagaManager(X eventBus) {
-		Set<Bean<?>> beans = getBeanManager().getBeans(SagaManager.class, getQualifiers());
-		Bean<?> bean = getBeanManager().resolve(beans);
-		if (bean != null) {
-			eventBus.subscribe(
-					(SagaManager) CdiUtils.getReference(getBeanManager(), bean, SagaManager.class));
+		final Set<Annotation> qualifiers = ImmutableSet.copyOf(getQualifiers());
+		for (SagaManagerInfo sagaManager : sagaManagers) {
+			if (CdiUtils.qualifiersMatch(sagaManager.getEventBusQualifiers(), qualifiers)) {
+				Set<Bean<?>> beans = getBeans(getBeanManager(), SagaManager.class,
+						sagaManager.getRepositoryQualifiers());
+				Bean<?> bean = getBeanManager().resolve(beans);
+				if (bean != null) {
+					eventBus.subscribe(
+							(SagaManager) getReference(getBeanManager(), bean, SagaManager.class));
+				}
+			}
 		}
 	}
 
