@@ -31,9 +31,7 @@ import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventsourcing.AbstractSnapshotter;
 import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
 import org.axonframework.eventsourcing.EventSourcingRepository;
-import org.axonframework.integration.cdi.AggregateConfiguration;
 import org.axonframework.integration.cdi.AutoConfigure;
-import org.axonframework.integration.cdi.SagaConfiguration;
 import org.axonframework.integration.cdi.extension.impl.AggregateRootInfo;
 import org.axonframework.integration.cdi.extension.impl.AggregateRootInfo.QualifierType;
 import org.axonframework.integration.cdi.extension.impl.AutoConfiguringAggregateSnapshotter;
@@ -71,10 +69,6 @@ public class AxonCdiExtension implements Extension {
 		if (isAggregateRoot) {
 			configuration.add(AggregateRootInfo.of(beanManager, at));
 			pat.veto();
-		} else {
-			Preconditions.checkArgument(!at.isAnnotationPresent(AggregateConfiguration.class),
-					"Type %s is annotated with @AggregateConfiguration but is not an aggregate root",
-					at);
 		}
 
 	}
@@ -85,9 +79,6 @@ public class AxonCdiExtension implements Extension {
 		if (isAnnotatedSaga(at.getJavaClass())) {
 			configuration.add(SagaInfo.of(beanManager, at));
 			pat.veto();
-		} else {
-			Preconditions.checkArgument(!at.isAnnotationPresent(SagaConfiguration.class),
-					"Type %s is annotated with @SagaConfiguration but is not a saga", at);
 		}
 	}
 

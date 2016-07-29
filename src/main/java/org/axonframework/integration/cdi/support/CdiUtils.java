@@ -18,7 +18,7 @@ import org.apache.deltaspike.core.api.literal.AnyLiteral;
 import org.apache.deltaspike.core.api.literal.DefaultLiteral;
 import org.apache.deltaspike.core.util.BeanUtils;
 import org.apache.deltaspike.core.util.HierarchyDiscovery;
-import org.axonframework.integration.cdi.DefaultQualifier;
+import org.axonframework.integration.cdi.DefaultQualifierMeme;
 import org.axonframework.integration.cdi.InheritQualifiers;
 
 import com.google.common.collect.ImmutableSet;
@@ -26,9 +26,16 @@ import com.google.common.collect.Iterables;
 
 public final class CdiUtils {
 
-	private static final Class<?> DEFAULT_MARKER = DefaultQualifier.class;
+	public static final Any ANY_LITERAL = new AnyLiteral();
+
+	public static final Default DEFAULT_LITERAL = new DefaultLiteral();
+
+	private static final Class<?> DEFAULT_MARKER = DefaultQualifierMeme.class;
 
 	private static final Class<?> INHERIT_MARKER = InheritQualifiers.class;
+
+	private static final Set<Annotation> DEFAULT_QUALIFIERS = ImmutableSet
+			.<Annotation> of(DEFAULT_LITERAL, ANY_LITERAL);
 
 	private CdiUtils() {}
 
@@ -53,13 +60,6 @@ public final class CdiUtils {
 		return normalizedQualifiers(qualifiers).equals(normalizedQualifiers(otherQualifiers));
 	}
 
-	private static final Any ANY_LITERAL = new AnyLiteral();
-
-	private static final Default DEFAULT_LITERAL = new DefaultLiteral();
-
-	private static final Set<Annotation> DEFAULT_QUALIFIERS = ImmutableSet
-			.<Annotation> of(DEFAULT_LITERAL, ANY_LITERAL);
-
 	public static Set<Annotation> normalizedQualifiers(Set<Annotation> qualifiers) {
 		switch (qualifiers.size()) {
 		case 0:
@@ -70,7 +70,7 @@ public final class CdiUtils {
 			}
 			break;
 		case 2:
-			if(DEFAULT_QUALIFIERS.equals(qualifiers)){
+			if (DEFAULT_QUALIFIERS.equals(qualifiers)) {
 				return DEFAULT_QUALIFIERS;
 			}
 			break;
@@ -119,6 +119,30 @@ public final class CdiUtils {
 
 	public static Set<Type> typeClosure(Type type) {
 		return new HierarchyDiscovery(type).getTypeClosure();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T extends Annotation> T findAnnotation(BeanManager beanManager,
+			Annotation[] annotations, Class<T> targetAnnotationType) {
+		for (Annotation annotation : annotations) {
+			if (targetAnnotationType.equals(annotation.annotationType())) {
+				return (T) annotation;
+			}
+			if (beanManager.isStereotype(annotation.annotationType())) {
+				T result = findAnnotation(beanManager, annotation.annotationType().getAnnotations(),
+						targetAnnotationType);
+				if (result != null) {
+					return result;
+				}
+			}
+		}
+		return null;
+	}
+
+	public static <T extends Annotation> T findAnnotation(BeanManager beanManager,
+			Iterable<Annotation> annotations, Class<T> targetAnnotationType) {
+		return findAnnotation(beanManager, Iterables.toArray(annotations, Annotation.class),
+				targetAnnotationType);
 	}
 
 }

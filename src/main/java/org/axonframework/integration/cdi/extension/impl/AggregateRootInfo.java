@@ -2,6 +2,7 @@ package org.axonframework.integration.cdi.extension.impl;
 
 import static com.google.common.collect.Maps.newHashMap;
 import static com.google.common.collect.Maps.transformValues;
+import static org.axonframework.integration.cdi.support.CdiUtils.findAnnotation;
 import static org.axonframework.integration.cdi.support.CdiUtils.isInheritMarker;
 import static org.axonframework.integration.cdi.support.CdiUtils.normalizedQualifiers;
 import static org.axonframework.integration.cdi.support.CdiUtils.qualifiers;
@@ -19,7 +20,6 @@ import javax.enterprise.inject.spi.BeanManager;
 import org.axonframework.integration.cdi.AggregateConfiguration;
 import org.axonframework.integration.cdi.support.AxonUtils;
 
-import com.google.common.base.Function;
 import com.google.common.base.Preconditions;
 
 public class AggregateRootInfo extends AxonConfigInfo {
@@ -98,9 +98,11 @@ public class AggregateRootInfo extends AxonConfigInfo {
 	private static Map<QualifierType, Set<Annotation>> extractQualifiers(BeanManager bm,
 			AnnotatedType<?> annotated) {
 		Map<QualifierType, Set<Annotation>> qualifiers = new HashMap<>();
-		if (annotated.isAnnotationPresent(AggregateConfiguration.class)) {
-			AggregateConfiguration ac = annotated.getAnnotation(AggregateConfiguration.class);
-			qualifiers.putAll(extractQualifiers(bm, ac, annotated.getJavaClass()));
+		AggregateConfiguration aggregateConfiguration = findAnnotation(bm,
+				annotated.getAnnotations(), AggregateConfiguration.class);
+		if (aggregateConfiguration != null) {
+			qualifiers.putAll(
+					extractQualifiers(bm, aggregateConfiguration, annotated.getJavaClass()));
 		} else {
 			Set<Annotation> defaultQualifiers = qualifiers(bm, annotated);
 			for (QualifierType type : QualifierType.values()) {
@@ -112,13 +114,7 @@ public class AggregateRootInfo extends AxonConfigInfo {
 
 	private static Map<QualifierType, Set<Annotation>> normalizeQualifiers(
 			Map<QualifierType, Set<Annotation>> map) {
-		return newHashMap(transformValues(map, new Function<Set<Annotation>, Set<Annotation>>() {
-
-			@Override
-			public Set<Annotation> apply(Set<Annotation> input) {
-				return normalizedQualifiers(input);
-			}
-		}));
+		return newHashMap(transformValues(map, NormalizeQualifierFn.INSTANCE));
 	}
 
 	private static Map<? extends QualifierType, ? extends Set<Annotation>> extractQualifiers(

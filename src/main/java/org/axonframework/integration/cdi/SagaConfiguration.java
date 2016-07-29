@@ -12,12 +12,12 @@ import java.lang.annotation.Target;
 @Documented
 public @interface SagaConfiguration {
 
-	Class<?> value() default DefaultQualifier.class;
+	Class<?> value() default DefaultQualifierMeme.class;
 
-	Class<?> repository() default DefaultQualifier.class;
+	Class<?> repository() default DefaultQualifierMeme.class;
 
-	Class<?> factory() default DefaultQualifier.class;
+	Class<?> factory() default DefaultQualifierMeme.class;
 
-	Class<?> eventBus() default DefaultQualifier.class;
+	Class<?> eventBus() default DefaultQualifierMeme.class;
 
 }
