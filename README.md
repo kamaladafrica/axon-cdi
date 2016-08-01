@@ -40,17 +40,17 @@ As result you get:
 There are available two annotations that allow you to customize configuration: `@AggregateConfiguration` and `@SagaConfiguration`.
 Both work thanks to memes, but...
 
-#### What is a "**meme**"?
+#### ...what is a "**meme**"?
 
-A **meme** is a type (an interface is recommended, but it can be a class) which is annotated with cdi qualifiers. 
-the "meme" concept is introducted to bypass some limitation of annotation declarations.
+A **meme** is a type (interface type is recommended, but it can be a class) which is annotated with cdi qualifiers. 
+The "meme" concept is introducted to bypass some limitation of annotation declarations.
 For example, if we have the qualifier @MyAwesomeQualifier, a meme can be decalred as
 ```java
 @MyAwesomeQualifier
 public class interface MyAwesomeQualifierMeme {}
 ```
 Meme allows CDI extension to capture the exact qualifier instances.
-Memes can declare qualifiers complex as you need
+Memes can declare qualifiers as complex as you need
 ```java
 @MyAwesomeQualifier @MyWonderfulQualifier(value="Yes! I'm the best") 
 public class interface MyAwesomeQualifierMeme {}
@@ -81,12 +81,10 @@ CDIConfiguration.java
 	public EventBus eventBusAggregateB() {...}
 
 	@Produces
-	@AutoConfigure
 	@ApplicationScoped
 	public EventStore eventStoreAggregateA() {...}
 
 	@Produces
-	@AutoConfigure
 	@AggregateBQualifier
 	@ApplicationScoped
 	public EventStore eventStoreAggregateB() {...}
@@ -122,7 +120,7 @@ In this way you tell axon-cdi to register the AggregateB with:
 
 *NB. CDI specification states that beans with no qualifiers are implicitly qualified with @Default (in addition to @Any)*
 
-In order to make code clean, stereotypes are supported so you can annotate you aggregate root with @AggregateBStereotype declared as follow
+In order to make code cleaner, stereotypes are supported so you can annotate you aggregate root with @AggregateBStereotype declared as follow
 ```java
 @AggregateConfiguration(
 		value = AggregateBQualifierMeme.class, 
