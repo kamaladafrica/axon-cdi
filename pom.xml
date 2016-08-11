@@ -4,10 +4,12 @@
 
 	<groupId>com.github.kamaladafrica</groupId>
 	<artifactId>axon-cdi</artifactId>
-	<version>1.0-SNAPSHOT</version>
+	<version>2.0-SNAPSHOT</version>
 
 	<name>Axon Framework CDI Integration</name>
 
+ 	<url>https://github.com/kamaladafrica/axon-cdi</url>
+	
 	<modelVersion>4.0.0</modelVersion>
 
 	<properties>
@@ -25,7 +27,49 @@
 		<skipTests>true</skipTests>
 	</properties>
 
+	<issueManagement>
+	    <system>GitHub Issues</system>
+	    <url>https://github.com/kamaladafrica/axon-cdi/issues</url>
+	</issueManagement>
+	<inceptionYear>2010</inceptionYear>
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<prerequisites>
+		<maven>3.0.3</maven>
+	</prerequisites>
+	<scm>
+		<connection>scm:git:https://github.com/kamaladafrica/axon-cdi.git</connection>
+		<developerConnection>scm:git:git@github.com:kamaladafrica/axon-cdi.git</developerConnection>
+		<url>https://github.com/kamaladafrica/axon-cdi</url>
+	</scm>
+	<developers>
+		<developer>
+			<id>kamaladafrica</id>
+			<name>Alessio D'Innocenti</name>
+			<email>alessio.dinnocenti@google.com</email>
+			<roles>
+				<role>developer</role>
+			</roles>
+			<timezone>+1</timezone>
+		</developer>
+	</developers>
+
 	<build>
+		<resources>
+			<resource>
+				<targetPath>META-INF</targetPath>
+				<directory>${project.basedir}</directory>
+				<includes>
+					<include>LICENSE.txt</include>
+					<include>NOTICE.txt</include>
+				</includes>
+			</resource>
+		</resources>	
 		<plugins>
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
@@ -71,6 +115,18 @@
 					</execution>
 				</executions>
 			</plugin>
+			<plugin>
+	            <groupId>org.codehaus.mojo</groupId>
+	            <artifactId>versions-maven-plugin</artifactId>
+	            <version>2.1</version>
+	        </plugin>
+	        <plugin>
+	            <artifactId>maven-scm-plugin</artifactId>
+	            <version>1.8.1</version>
+	            <configuration>
+	                <tag>${project.artifactId}-${project.version}</tag>
+	            </configuration>
+	        </plugin>
 		</plugins>
 	</build>
 
