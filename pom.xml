@@ -1,16 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-	<groupId>com.github.kamaladafrica</groupId>
-	<artifactId>axon-cdi</artifactId>
-	<version>2.0-SNAPSHOT</version>
+	<modelVersion>4.0.0</modelVersion>
 
 	<name>Axon Framework CDI Integration</name>
 
- 	<url>https://github.com/kamaladafrica/axon-cdi</url>
-	
-	<modelVersion>4.0.0</modelVersion>
+	<groupId>it.kamaladafrica</groupId>
+	<artifactId>axon-cdi</artifactId>
+	<version>2.0-SNAPSHOT</version>
+
+	<packaging>jar</packaging>
+
+ 	<url>https://github.com/kamaladafrica/axon-cdi</url>	
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -31,7 +32,7 @@
 	    <system>GitHub Issues</system>
 	    <url>https://github.com/kamaladafrica/axon-cdi/issues</url>
 	</issueManagement>
-	<inceptionYear>2010</inceptionYear>
+	<inceptionYear>2015</inceptionYear>
 	<licenses>
 		<license>
 			<name>The Apache Software License, Version 2.0</name>
@@ -44,9 +45,10 @@
 	</prerequisites>
 	<scm>
 		<connection>scm:git:https://github.com/kamaladafrica/axon-cdi.git</connection>
-		<developerConnection>scm:git:git@github.com:kamaladafrica/axon-cdi.git</developerConnection>
+		<developerConnection>scm:git:https://github.com/kamaladafrica/axon-cdi.git</developerConnection>
 		<url>https://github.com/kamaladafrica/axon-cdi</url>
-	</scm>
+    <tag>HEAD</tag>
+  </scm>
 	<developers>
 		<developer>
 			<id>kamaladafrica</id>
@@ -58,18 +60,13 @@
 			<timezone>+1</timezone>
 		</developer>
 	</developers>
-
-	<build>
-		<resources>
-			<resource>
-				<targetPath>META-INF</targetPath>
-				<directory>${project.basedir}</directory>
-				<includes>
-					<include>LICENSE.txt</include>
-					<include>NOTICE.txt</include>
-				</includes>
-			</resource>
-		</resources>		
+	<distributionManagement>
+	    <repository>
+	       <id>bintray</id>
+	       <url>https://api.bintray.com/maven/kamaladafrica/maven/axon-cdi/;publish=1</url>
+	    </repository>
+	</distributionManagement>
+ 	<build>
 		<plugins>
 			<plugin>
 				<artifactId>maven-resources-plugin</artifactId>
@@ -78,6 +75,10 @@
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
+			<plugin>
+		        <artifactId>maven-deploy-plugin</artifactId>
+		        <version>2.8.2</version>
+		    </plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -88,40 +89,47 @@
 		        <groupId>org.apache.maven.plugins</groupId>
 		        <artifactId>maven-source-plugin</artifactId>
 		        <version>2.4</version>
-				<executions>
-					<execution>
-						<id>attach-sources</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
 				<version>2.10.3</version>
-				<executions>
-					<execution>
-						<id>attach-javadocs</id>
-						<goals>
-							<goal>jar</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
-		</plugins>
+	        <plugin>
+	            <artifactId>maven-scm-plugin</artifactId>
+	            <version>1.8.1</version>
+	            <configuration>
+	                <tag>v${project.version}</tag>
+	            </configuration>
+	        </plugin>
+			<plugin>
+	            <groupId>org.codehaus.mojo</groupId>
+	            <artifactId>versions-maven-plugin</artifactId>
+	            <version>2.1</version>
+	        </plugin>
+			<plugin>
+	            <groupId>external.atlassian.jgitflow</groupId>
+	            <artifactId>jgitflow-maven-plugin</artifactId>
+	            <version>1.0-m5.1</version>
+	            <configuration>
+					<flowInitContext>
+						<versionTagPrefix>v</versionTagPrefix>
+					</flowInitContext>
+	            </configuration>
+	        </plugin>
+			<plugin>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+				<configuration>
+					<useReleaseProfile>false</useReleaseProfile>
+					<releaseProfiles>release</releaseProfiles>
+					<autoVersionSubmodules>true</autoVersionSubmodules>
+      				<tagNameFormat>v@{project.version}</tagNameFormat>
+				</configuration>
+		    </plugin>
+    	</plugins>
 	</build>
-
-	<distributionManagement>
-		<site>
-			<id>axon-cdi-site</id>
-			<name>Axon CDI Documentation Site</name>
-			<url>scp://dummy.server/dontinstall/usestaging</url>
-		</site>
-	</distributionManagement>
-
 
 	<dependencies>
 		<!-- Axon Dependency -->
@@ -195,5 +203,49 @@
 		</dependency>
 
 	</dependencies>
+
+<profiles>
+	<profile>
+		<id>release</id>
+		<build>
+			<!--
+			<resources>
+				<resource>
+					<targetPath>META-INF</targetPath>
+					<directory>${project.basedir}</directory>
+					<includes>
+						<include>LICENSE.txt</include>
+						<include>NOTICE.txt</include>
+					</includes>
+				</resource>
+			</resources>
+			-->	
+			<plugins>
+				<plugin>
+					<artifactId>maven-source-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>attach-sources</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<artifactId>maven-javadoc-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>attach-javadocs</id>
+							<goals>
+								<goal>jar</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</build>
+	</profile>
+</profiles>
 
 </project>
