@@ -116,18 +116,9 @@
 					<flowInitContext>
 						<versionTagPrefix>v</versionTagPrefix>
 					</flowInitContext>
+    				<autoVersionSubmodules>true</autoVersionSubmodules>
 	            </configuration>
 	        </plugin>
-			<plugin>
-				<artifactId>maven-release-plugin</artifactId>
-				<version>2.5.3</version>
-				<configuration>
-					<useReleaseProfile>false</useReleaseProfile>
-					<releaseProfiles>release</releaseProfiles>
-					<autoVersionSubmodules>true</autoVersionSubmodules>
-      				<tagNameFormat>v@{project.version}</tagNameFormat>
-				</configuration>
-		    </plugin>
     	</plugins>
 	</build>
 
@@ -203,49 +194,5 @@
 		</dependency>
 
 	</dependencies>
-
-<profiles>
-	<profile>
-		<id>release</id>
-		<build>
-			<!--
-			<resources>
-				<resource>
-					<targetPath>META-INF</targetPath>
-					<directory>${project.basedir}</directory>
-					<includes>
-						<include>LICENSE.txt</include>
-						<include>NOTICE.txt</include>
-					</includes>
-				</resource>
-			</resources>
-			-->	
-			<plugins>
-				<plugin>
-					<artifactId>maven-source-plugin</artifactId>
-					<executions>
-						<execution>
-							<id>attach-sources</id>
-							<goals>
-								<goal>jar</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-				<plugin>
-					<artifactId>maven-javadoc-plugin</artifactId>
-					<executions>
-						<execution>
-							<id>attach-javadocs</id>
-							<goals>
-								<goal>jar</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-			</plugins>
-		</build>
-	</profile>
-</profiles>
 
 </project>
