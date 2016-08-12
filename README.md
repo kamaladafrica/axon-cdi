@@ -29,31 +29,27 @@ You can checkout the [Quickstart project](https://github.com/kamaladafrica/axon-
 
 ## Getting started
 
-All you need to do is to add the [Jitpack.io](https://jitpack.io)  repository in the maven pom.xml
+All you need to do is to add the [Bintray jcenter](https://bintray.com/bintray/jcenter) repository in the maven pom.xml
 
 
-		<repository>
-			<id>jitpack.io</id>
-			<url>https://jitpack.io</url>
-			<name>Jitpack.io Repository</name>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-
+		<repositories>
+			<repository>
+				<snapshots>
+					<enabled>false</enabled>
+				</snapshots>
+				<id>central</id>
+				<name>bintray</name>
+				<url>http://jcenter.bintray.com</url>
+			</repository>
+		</repositories>
+		
 and declare the dependency
 
 		<dependency>
-		  <groupId>com.github.kamaladafrica</groupId>
+		  <groupId>it.kamaladafrica</groupId>
 		  <artifactId>axon-cdi</artifactId>
-		  <version>${version}</version>
+		  <version>1.0</version>
 		</dependency>
-
-For the very last version you can write `<version>master</version>`
- 
 
 ## Contributing
 
