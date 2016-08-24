@@ -1,4 +1,5 @@
 # Axon Framework CDI Integration
+ [ ![Download](https://api.bintray.com/packages/kamaladafrica/maven/axon-cdi/images/download.svg) ](https://bintray.com/kamaladafrica/maven/axon-cdi/_latestVersion) 
 
 A CDI Extension that helps [Axon Framework](http://www.axonframework.org) and CDI integration.
 You only need to @Produces some required instances and annotate them with @Autoconfigure, in order to get Axon Framework up and running in a CDI environment.
