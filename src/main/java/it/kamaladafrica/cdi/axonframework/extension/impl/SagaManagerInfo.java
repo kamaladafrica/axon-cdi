@@ -24,8 +24,8 @@ public final class SagaManagerInfo {
 
 	private final Set<SagaInfo> sagas;
 
-	private SagaManagerInfo(Set<Annotation> repositoryQualifiers, Set<Annotation> factoryQualifiers,
-			Set<Annotation> eventBusQualifiers, Set<SagaInfo> sagas) {
+	private SagaManagerInfo(final Set<Annotation> repositoryQualifiers, final Set<Annotation> factoryQualifiers,
+			final Set<Annotation> eventBusQualifiers, final Set<SagaInfo> sagas) {
 		Preconditions.checkArgument(!sagas.isEmpty());
 		this.repositoryQualifiers = Objects.requireNonNull(repositoryQualifiers);
 		this.factoryQualifiers = Objects.requireNonNull(factoryQualifiers);
@@ -63,7 +63,7 @@ public final class SagaManagerInfo {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(final Object obj) {
 		if (this == obj) {
 			return true;
 		}
@@ -105,7 +105,7 @@ public final class SagaManagerInfo {
 		return true;
 	}
 
-	public static Set<SagaManagerInfo> from(Iterable<SagaInfo> sagas) {
+	public static Set<SagaManagerInfo> from(final Iterable<SagaInfo> sagas) {
 		Multimap<PartitionKey, SagaInfo> sagaInfos = HashMultimap.create();
 		for (SagaInfo saga : sagas) {
 			sagaInfos.put(PartitionKey.of(saga), saga);
@@ -129,8 +129,8 @@ public final class SagaManagerInfo {
 
 		private final Set<Annotation> eventBus;
 
-		private PartitionKey(Set<Annotation> repository, Set<Annotation> factory,
-				Set<Annotation> eventBus) {
+		private PartitionKey(final Set<Annotation> repository, final Set<Annotation> factory,
+				final Set<Annotation> eventBus) {
 			this.repository = repository;
 			this.factory = factory;
 			this.eventBus = eventBus;
@@ -159,7 +159,7 @@ public final class SagaManagerInfo {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
+		public boolean equals(final Object obj) {
 			if (this == obj) {
 				return true;
 			}
@@ -194,7 +194,7 @@ public final class SagaManagerInfo {
 			return true;
 		}
 
-		static PartitionKey of(SagaInfo saga) {
+		static PartitionKey of(final SagaInfo saga) {
 			return new PartitionKey(saga.getQualifiers(QualifierType.REPOSITORY),
 					saga.getQualifiers(QualifierType.FACTORY),
 					saga.getQualifiers(QualifierType.EVENT_BUS));

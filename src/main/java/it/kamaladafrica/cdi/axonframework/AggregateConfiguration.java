@@ -20,9 +20,7 @@ public @interface AggregateConfiguration {
 
 	Class<?> commandBus() default InheritQualifiers.class;
 
-	Class<?> conflictResolver() default InheritQualifiers.class;
-
-	Class<?> snapshotterTrigger() default InheritQualifiers.class;
+	Class<?> snapshotterTriggerDefinition() default InheritQualifiers.class;
 
 	Class<?> snapshotter() default InheritQualifiers.class;
 

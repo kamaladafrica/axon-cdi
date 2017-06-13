@@ -1,11 +1,11 @@
 package it.kamaladafrica.cdi.axonframework.extension.impl;
 
-import static it.kamaladafrica.cdi.axonframework.support.CdiUtils.normalizedQualifiers;
-
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import com.google.common.base.Function;
+
+import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
 
 class NormalizeQualifierFn implements Function<Set<Annotation>, Set<Annotation>> {
 
@@ -14,7 +14,7 @@ class NormalizeQualifierFn implements Function<Set<Annotation>, Set<Annotation>>
 	private NormalizeQualifierFn() {}
 
 	@Override
-	public Set<Annotation> apply(Set<Annotation> input) {
-		return normalizedQualifiers(input);
+	public Set<Annotation> apply(final Set<Annotation> input) {
+		return CdiUtils.normalizedQualifiers(input);
 	}
 }
