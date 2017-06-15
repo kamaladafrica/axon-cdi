@@ -18,16 +18,16 @@ public abstract class AxonConfigInfo {
 
 	private final Optional<Bean<?>> bean;
 
-	private AxonConfigInfo(Class<?> type, Bean<?> bean) {
+	private AxonConfigInfo(final Class<?> type, final Bean<?> bean) {
 		this.type = Objects.requireNonNull(type);
 		this.bean = Optional.<Bean<?>> fromNullable(bean);
 	}
 
-	protected AxonConfigInfo(Class<?> type) {
+	protected AxonConfigInfo(final Class<?> type) {
 		this(type, null);
 	}
 
-	protected AxonConfigInfo(Bean<?> bean) {
+	protected AxonConfigInfo(final Bean<?> bean) {
 		this(bean.getBeanClass(), bean);
 	}
 
@@ -39,7 +39,7 @@ public abstract class AxonConfigInfo {
 		return bean;
 	}
 
-	public final AnnotatedType<?> getAnnotatedType(BeanManager bm) {
+	public final AnnotatedType<?> getAnnotatedType(final BeanManager bm) {
 		return bm.createAnnotatedType(type);
 	}
 
@@ -60,7 +60,7 @@ public abstract class AxonConfigInfo {
 		return bm.getBeans(type, qualifiers);
 	}
 
-	protected final Object getReference(BeanManager bm, Set<Annotation> qualifiers) {
+	protected final Object getReference(final BeanManager bm, final Set<Annotation> qualifiers) {
 		Bean<?> bean = resolveBean(bm, qualifiers);
 		return bm.getReference(bean, bean.getBeanClass(), bm.createCreationalContext(null));
 	}

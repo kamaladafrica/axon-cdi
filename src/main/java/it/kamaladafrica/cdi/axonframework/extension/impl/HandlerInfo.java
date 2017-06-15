@@ -1,11 +1,10 @@
 package it.kamaladafrica.cdi.axonframework.extension.impl;
 
-import static it.kamaladafrica.cdi.axonframework.support.CdiUtils.normalizedQualifiers;
-import static it.kamaladafrica.cdi.axonframework.support.CdiUtils.qualifiers;
-import static java.util.Collections.unmodifiableSet;
 import it.kamaladafrica.cdi.axonframework.support.AxonUtils;
+import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
 
 import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.Set;
 
 import javax.enterprise.inject.spi.AnnotatedType;
@@ -20,17 +19,17 @@ public class HandlerInfo extends AxonConfigInfo {
 
 	private final boolean eventHandler;
 
-	private HandlerInfo(Class<?> type, Set<Annotation> qualifiers, boolean eventHandler) {
+	private HandlerInfo(final Class<?> type, final Set<Annotation> qualifiers, final boolean eventHandler) {
 		super(type);
 		ensureHandlerType(eventHandler, type);
-		this.qualifiers = unmodifiableSet(normalizedQualifiers(qualifiers));
+		this.qualifiers = Collections.unmodifiableSet(CdiUtils.normalizedQualifiers(qualifiers));
 		this.eventHandler = eventHandler;
 	}
 
-	private HandlerInfo(Bean<?> bean, Set<Annotation> qualifiers, boolean eventHandler) {
+	private HandlerInfo(final Bean<?> bean, final Set<Annotation> qualifiers, final boolean eventHandler) {
 		super(bean);
 		ensureHandlerType(eventHandler, bean.getBeanClass());
-		this.qualifiers = unmodifiableSet(normalizedQualifiers(qualifiers));
+		this.qualifiers = Collections.unmodifiableSet(CdiUtils.normalizedQualifiers(qualifiers));
 		this.eventHandler = eventHandler;
 	}
 
@@ -46,15 +45,15 @@ public class HandlerInfo extends AxonConfigInfo {
 		return !eventHandler;
 	}
 
-	public Set<Bean<?>> getBeans(BeanManager bm) {
+	public Set<Bean<?>> getBeans(final BeanManager bm) {
 		return super.getBeans(bm, getQualifiers());
 	}
 
-	public Bean<?> resolveBean(BeanManager bm) {
+	public Bean<?> resolveBean(final BeanManager bm) {
 		return super.resolveBean(bm, getQualifiers());
 	}
 
-	public Object getReference(BeanManager bm) {
+	public Object getReference(final BeanManager bm) {
 		return super.getReference(bm, getQualifiers());
 	}
 
@@ -92,23 +91,23 @@ public class HandlerInfo extends AxonConfigInfo {
 		return true;
 	}
 
-	public static HandlerInfo eventHandler(BeanManager bm, AnnotatedType<?> annotated) {
-		return new HandlerInfo(annotated.getJavaClass(), qualifiers(bm, annotated), true);
+	public static HandlerInfo eventHandler(final BeanManager bm, final AnnotatedType<?> annotated) {
+		return new HandlerInfo(annotated.getJavaClass(), CdiUtils.qualifiers(bm, annotated), true);
 	}
 
-	public static HandlerInfo commandHandler(BeanManager bm, AnnotatedType<?> annotated) {
-		return new HandlerInfo(annotated.getJavaClass(), qualifiers(bm, annotated), false);
+	public static HandlerInfo commandHandler(final BeanManager bm, final AnnotatedType<?> annotated) {
+		return new HandlerInfo(annotated.getJavaClass(), CdiUtils.qualifiers(bm, annotated), false);
 	}
 
-	public static HandlerInfo eventHandler(Bean<?> bean) {
+	public static HandlerInfo eventHandler(final Bean<?> bean) {
 		return new HandlerInfo(bean, bean.getQualifiers(), true);
 	}
 
-	public static HandlerInfo commandHandler(Bean<?> bean) {
+	public static HandlerInfo commandHandler(final Bean<?> bean) {
 		return new HandlerInfo(bean, bean.getQualifiers(), false);
 	}
 
-	private static void ensureHandlerType(boolean eventHandler, Class<?> handlerClass) {
+	private static void ensureHandlerType(final boolean eventHandler, final Class<?> handlerClass) {
 		if (eventHandler) {
 			Preconditions.checkArgument(AxonUtils.isEventHandler(handlerClass),
 					"Provided type is not a valid event handler: " + handlerClass.getName());

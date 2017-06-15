@@ -11,72 +11,74 @@ import javax.enterprise.util.TypeLiteral;
 import org.apache.deltaspike.core.util.ExceptionUtils;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.domain.AggregateRoot;
+import org.axonframework.commandhandling.model.AggregateRoot;
 import org.axonframework.eventhandling.EventBus;
+import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.EventListener;
-import org.axonframework.eventhandling.annotation.EventHandler;
-import org.axonframework.eventsourcing.EventSourcedAggregateRoot;
-import org.axonframework.saga.annotation.AbstractAnnotatedSaga;
 
 public class AxonUtils {
 
-	public static boolean isAnnotatedAggregateRoot(Class<?> targetClass) {
-		return EventSourcedAggregateRoot.class.isAssignableFrom(targetClass)
+	public static boolean isAnnotatedAggregateRoot(final Class<?> targetClass) {
+		return targetClass.isAnnotationPresent(AggregateRoot.class)
 				&& !Modifier.isAbstract(targetClass.getModifiers());
 	}
 
-	public static boolean isAnnotatedSaga(Class<?> targetClass) {
-		return AbstractAnnotatedSaga.class.isAssignableFrom(targetClass)
+	public static boolean isAnnotatedSaga(final Class<?> targetClass) {
+		// check if @StartSaga is present on a method
+		final AtomicBoolean result = new AtomicBoolean(false);
+		doWithMethods(targetClass, new HasStartSagaAnnotationMethodCallback(
+				result));
+		return result.get()
 				&& !Modifier.isAbstract(targetClass.getModifiers());
 	}
 
-	public static boolean isCommandHandler(Class<?> targetClass) {
+	public static boolean isCommandHandler(final Class<?> targetClass) {
 		return isNotCommandHandlerSubclass(targetClass) && hasCommandHandlerMethod(targetClass);
 	}
 
-	public static boolean isCommandBus(Class<?> targetClass) {
+	public static boolean isCommandBus(final Class<?> targetClass) {
 		return CommandBus.class.isAssignableFrom(targetClass)
 				&& !Modifier.isAbstract(targetClass.getModifiers());
 	}
 
-	public static boolean isEventBus(Class<?> targetClass) {
+	public static boolean isEventBus(final Class<?> targetClass) {
 		return EventBus.class.isAssignableFrom(targetClass)
 				&& !Modifier.isAbstract(targetClass.getModifiers());
 	}
 
-	public static boolean isEventHandler(Class<?> targetClass) {
+	public static boolean isEventHandler(final Class<?> targetClass) {
 		return isNotAggregateRoot(targetClass) && isNotEventHandlerSubclass(targetClass)
 				&& hasEventHandlerMethod(targetClass);
 	}
 
-	public static boolean isNotCommandHandlerSubclass(Class<?> beanClass) {
+	public static boolean isNotCommandHandlerSubclass(final Class<?> beanClass) {
 		return !CommandHandler.class.isAssignableFrom(beanClass)
 				&& !AggregateRoot.class.isAssignableFrom(beanClass);
 	}
 
-	public static boolean hasCommandHandlerMethod(Class<?> beanClass) {
+	public static boolean hasCommandHandlerMethod(final Class<?> beanClass) {
 		final AtomicBoolean result = new AtomicBoolean(false);
 		doWithMethods(beanClass, new HasCommandHandlerAnnotationMethodCallback(
 				result));
 		return result.get();
 	}
 
-	public static boolean isNotAggregateRoot(Class<?> targetClass) {
+	public static boolean isNotAggregateRoot(final Class<?> targetClass) {
 		return !AggregateRoot.class.isAssignableFrom(targetClass);
 	}
 
-	public static boolean isNotEventHandlerSubclass(Class<?> beanClass) {
+	public static boolean isNotEventHandlerSubclass(final Class<?> beanClass) {
 		return !EventListener.class.isAssignableFrom(beanClass);
 	}
 
-	public static boolean hasEventHandlerMethod(Class<?> beanClass) {
+	public static boolean hasEventHandlerMethod(final Class<?> beanClass) {
 		final AtomicBoolean result = new AtomicBoolean(false);
 		doWithMethods(beanClass,
 				new HasEventHandlerAnnotationMethodCallback(result));
 		return result.get();
 	}
 
-	public static <T> TypeLiteral<T> asTypeLiteral(Type type) {
+	public static <T> TypeLiteral<T> asTypeLiteral(final Type type) {
 		@SuppressWarnings("serial")
 		TypeLiteral<T> literal = new TypeLiteral<T>() {};
 		for (Field field : TypeLiteral.class.getDeclaredFields()) {
@@ -92,12 +94,31 @@ public class AxonUtils {
 		return literal;
 	}
 
+	private static final class HasStartSagaAnnotationMethodCallback implements MethodCallback {
+
+		private final AtomicBoolean result;
+
+		private HasStartSagaAnnotationMethodCallback(final AtomicBoolean result) {
+			this.result = result;
+		}
+
+		@Override
+		public void doWith(final Method method) throws IllegalArgumentException, IllegalAccessException {
+			if (method
+					.isAnnotationPresent(
+							org.axonframework.eventhandling.saga.StartSaga.class)) {
+				result.set(true);
+			}
+		}
+		
+	}
+
 	private static final class HasCommandHandlerAnnotationMethodCallback implements
 			MethodCallback {
 
 		private final AtomicBoolean result;
 
-		private HasCommandHandlerAnnotationMethodCallback(AtomicBoolean result) {
+		private HasCommandHandlerAnnotationMethodCallback(final AtomicBoolean result) {
 			this.result = result;
 		}
 
@@ -105,10 +126,10 @@ public class AxonUtils {
 		 * {@inheritDoc}
 		 */
 		@Override
-		public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
+		public void doWith(final Method method) throws IllegalArgumentException, IllegalAccessException {
 			if (method
 					.isAnnotationPresent(
-							org.axonframework.commandhandling.annotation.CommandHandler.class)) {
+							org.axonframework.commandhandling.CommandHandler.class)) {
 				result.set(true);
 			}
 		}
@@ -119,7 +140,7 @@ public class AxonUtils {
 
 		private final AtomicBoolean result;
 
-		private HasEventHandlerAnnotationMethodCallback(AtomicBoolean result) {
+		private HasEventHandlerAnnotationMethodCallback(final AtomicBoolean result) {
 			this.result = result;
 		}
 
@@ -127,14 +148,14 @@ public class AxonUtils {
 		 * {@inheritDoc}
 		 */
 		@Override
-		public void doWith(Method method) throws IllegalArgumentException, IllegalAccessException {
+		public void doWith(final Method method) throws IllegalArgumentException, IllegalAccessException {
 			if (method.isAnnotationPresent(EventHandler.class)) {
 				result.set(true);
 			}
 		}
 	}
 
-	private static void doWithMethods(Class<?> clazz, MethodCallback mc)
+	private static void doWithMethods(final Class<?> clazz, final MethodCallback mc)
 			throws IllegalArgumentException {
 
 		// Keep backing up the inheritance hierarchy.
@@ -159,6 +180,7 @@ public class AxonUtils {
 	private interface MethodCallback {
 
 		void doWith(Method method) throws IllegalArgumentException, IllegalAccessException;
+
 	}
 
 }

@@ -5,19 +5,18 @@ import static java.util.Objects.requireNonNull;
 
 import javax.enterprise.inject.spi.BeanManager;
 
-import org.axonframework.saga.ResourceInjector;
-import org.axonframework.saga.Saga;
+import org.axonframework.eventhandling.saga.ResourceInjector;
 
 public class CdiResourceInjector implements ResourceInjector {
 
 	private final BeanManager beanManager;
 
-	public CdiResourceInjector(BeanManager beanManager) {
+	public CdiResourceInjector(final BeanManager beanManager) {
 		this.beanManager = requireNonNull(beanManager);
 	}
 
 	@Override
-	public void injectResources(Saga saga) {
+	public void injectResources(final Object saga) {
 		injectFields(beanManager, saga);
 	}
 
