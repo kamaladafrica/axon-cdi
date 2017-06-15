@@ -1,19 +1,17 @@
 package it.kamaladafrica.cdi.axonframework.extension.impl;
 
-import static it.kamaladafrica.cdi.axonframework.support.CdiUtils.normalizedQualifiers;
-import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
-
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.AnnotatedMember;
-import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.InjectionPoint;
 import javax.enterprise.inject.spi.Producer;
 
 import org.apache.deltaspike.core.util.BeanUtils;
+
+import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
 
 public abstract class AbstractAutoConfiguringProducer<X> implements Producer<X> {
 
@@ -23,16 +21,16 @@ public abstract class AbstractAutoConfiguringProducer<X> implements Producer<X> 
 
 	private final BeanManager beanManager;
 
-	public AbstractAutoConfiguringProducer(Producer<X> wrappedProducer,
-			AnnotatedMember<?> annotatedMember,
-			BeanManager beanManager) {
+	public AbstractAutoConfiguringProducer(final Producer<X> wrappedProducer,
+			final AnnotatedMember<?> annotatedMember,
+			final BeanManager beanManager) {
 		this.wrappedProducer = wrappedProducer;
 		this.beanManager = beanManager;
 		this.annotatedMember = annotatedMember;
 	}
 
 	@Override
-	public X produce(CreationalContext<X> ctx) {
+	public X produce(final CreationalContext<X> ctx) {
 		X instance = wrappedProducer.produce(ctx);
 		return configure(instance);
 	}
@@ -40,7 +38,7 @@ public abstract class AbstractAutoConfiguringProducer<X> implements Producer<X> 
 	protected abstract X configure(X instance);
 
 	@Override
-	public void dispose(X instance) {
+	public void dispose(final X instance) {
 		wrappedProducer.dispose(instance);
 	}
 
@@ -62,7 +60,7 @@ public abstract class AbstractAutoConfiguringProducer<X> implements Producer<X> 
 	}
 
 	protected Annotation[] getQualifiers() {
-		Set<Annotation> qualifiers = normalizedQualifiers(
+		Set<Annotation> qualifiers = CdiUtils.normalizedQualifiers(
 				BeanUtils.getQualifiers(beanManager, annotatedMember.getAnnotations()));
 		return qualifiers.toArray(new Annotation[qualifiers.size()]);
 	}

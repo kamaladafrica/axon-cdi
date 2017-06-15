@@ -40,28 +40,28 @@ public final class CdiUtils {
 
 	private CdiUtils() {}
 
-	public static Set<Annotation> qualifiers(BeanManager bm, Iterable<Annotation> annotations) {
+	public static Set<Annotation> qualifiers(final BeanManager bm, final Iterable<Annotation> annotations) {
 		return ImmutableSet.copyOf(BeanUtils.getQualifiers(bm, annotations));
 	}
 
-	public static Set<Annotation> qualifiers(BeanManager bm, Annotation[] annotations) {
+	public static Set<Annotation> qualifiers(final BeanManager bm, final Annotation[] annotations) {
 		return qualifiers(bm, Arrays.asList(annotations));
 	}
 
-	public static Set<Annotation> qualifiers(BeanManager bm, Annotated annotated) {
+	public static Set<Annotation> qualifiers(final BeanManager bm, final Annotated annotated) {
 		return qualifiers(bm, annotated.getAnnotations());
 	}
 
-	public static Set<Annotation> qualifiers(BeanManager bm, Class<?> javaClass) {
+	public static Set<Annotation> qualifiers(final BeanManager bm, final Class<?> javaClass) {
 		return qualifiers(bm, javaClass.getAnnotations());
 	}
 
-	public static boolean qualifiersMatch(Set<Annotation> qualifiers,
-			Set<Annotation> otherQualifiers) {
+	public static boolean qualifiersMatch(final Set<Annotation> qualifiers,
+			final Set<Annotation> otherQualifiers) {
 		return normalizedQualifiers(qualifiers).equals(normalizedQualifiers(otherQualifiers));
 	}
 
-	public static Set<Annotation> normalizedQualifiers(Set<Annotation> qualifiers) {
+	public static Set<Annotation> normalizedQualifiers(final Set<Annotation> qualifiers) {
 		switch (qualifiers.size()) {
 		case 0:
 			return DEFAULT_QUALIFIERS;
@@ -79,32 +79,51 @@ public final class CdiUtils {
 		return ImmutableSet.<Annotation> builder().addAll(qualifiers).add(ANY_LITERAL).build();
 	}
 
-	public static boolean isDefaultMarker(Class<?> marker) {
+	public static boolean isDefaultMarker(final Class<?> marker) {
 		return DEFAULT_MARKER.equals(marker);
 	}
 
-	public static boolean isInheritMarker(Class<?> marker) {
+	public static boolean isInheritMarker(final Class<?> marker) {
 		return INHERIT_MARKER.equals(marker);
 	}
 
-	public static Object getReference(BeanManager bm, Type type, Set<Annotation> qualifiers) {
+	public static Object getReference(final BeanManager bm, final Type type, final Set<Annotation> qualifiers) {
+		Annotation[] annotations = Iterables.toArray(qualifiers, Annotation.class);
+		return getReference(bm, type, annotations);
+	}
+
+	public static Object getReference(final BeanManager bm, final Type type, final Annotation... qualifiers) {
 		Set<Bean<?>> beans = getBeans(bm, type, qualifiers);
 		Bean<?> bean = bm.resolve(beans);
 		return bm.getReference(bean, type, bm.createCreationalContext(null));
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T> T getReference(BeanManager bm, Bean<T> bean, Type beanType) {
+	public static <T> T getReference(final BeanManager bm, final Bean<T> bean, final Type beanType) {
 		return (T) bm.getReference(bean, beanType, bm.createCreationalContext(null));
 	}
 
-	public static Set<Bean<?>> getBeans(BeanManager bm, Type type, Set<Annotation> qualifiers) {
+	public static Set<Bean<?>> getBeans(final BeanManager bm, final Type type, final Set<Annotation> qualifiers) {
 		Annotation[] annotations = Iterables.toArray(qualifiers, Annotation.class);
 		return bm.getBeans(type, annotations);
 	}
 
+	public static Set<Bean<?>> getBeans(final BeanManager bm, final Type type, final Annotation... qualifiers) {
+		return bm.getBeans(type, qualifiers);
+	}
+
+	public static Bean<?> getBean(final BeanManager bm, final Type type, final Set<Annotation> qualifiers) {
+		Annotation[] annotations = Iterables.toArray(qualifiers, Annotation.class);
+		return getBean(bm, type, annotations);
+	}
+
+	public static Bean<?> getBean(final BeanManager bm, final Type type, final Annotation... qualifiers) {
+		Set<Bean<?>> beans = getBeans(bm, type, qualifiers);
+		return bm.resolve(beans);
+	}
+
 	@SuppressWarnings("unchecked")
-	public static <T> T injectFields(BeanManager beanManager, T instance) {
+	public static <T> T injectFields(final BeanManager beanManager, final T instance) {
 		if (instance == null) {
 			return null;
 		}
@@ -118,13 +137,13 @@ public final class CdiUtils {
 		return instance;
 	}
 
-	public static Set<Type> typeClosure(Type type) {
+	public static Set<Type> typeClosure(final Type type) {
 		return new HierarchyDiscovery(type).getTypeClosure();
 	}
 
 	@SuppressWarnings("unchecked")
-	public static <T extends Annotation> T findAnnotation(BeanManager beanManager,
-			Annotation[] annotations, Class<T> targetAnnotationType) {
+	public static <T extends Annotation> T findAnnotation(final BeanManager beanManager,
+			final Annotation[] annotations, final Class<T> targetAnnotationType) {
 		for (Annotation annotation : annotations) {
 			if (targetAnnotationType.equals(annotation.annotationType())) {
 				return (T) annotation;
@@ -140,8 +159,8 @@ public final class CdiUtils {
 		return null;
 	}
 
-	public static <T extends Annotation> T findAnnotation(BeanManager beanManager,
-			Iterable<Annotation> annotations, Class<T> targetAnnotationType) {
+	public static <T extends Annotation> T findAnnotation(final BeanManager beanManager,
+			final Iterable<Annotation> annotations, final Class<T> targetAnnotationType) {
 		return findAnnotation(beanManager, Iterables.toArray(annotations, Annotation.class),
 				targetAnnotationType);
 	}
