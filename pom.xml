@@ -118,15 +118,14 @@
 	            <version>2.1</version>
 	        </plugin>
 			<plugin>
-	            <groupId>external.atlassian.jgitflow</groupId>
-	            <artifactId>jgitflow-maven-plugin</artifactId>
-	            <version>1.0-m5.1</version>
-	            <configuration>
-					<flowInitContext>
+				<groupId>com.amashchenko.maven.plugin</groupId>
+				<artifactId>gitflow-maven-plugin</artifactId>
+				<version>1.5.0</version>
+				<configuration>
+					<gitFlowConfig>
 						<versionTagPrefix>v</versionTagPrefix>
-					</flowInitContext>
-    				<autoVersionSubmodules>true</autoVersionSubmodules>
-	            </configuration>
+					</gitFlowConfig>
+				</configuration>
 	        </plugin>
     	</plugins>
 	</build>
