@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.enterprise.util.TypeLiteral;
@@ -11,10 +12,12 @@ import javax.enterprise.util.TypeLiteral;
 import org.apache.deltaspike.core.util.ExceptionUtils;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.CommandHandler;
+import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.commandhandling.model.AggregateRoot;
 import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.EventHandler;
 import org.axonframework.eventhandling.EventListener;
+import org.axonframework.messaging.correlation.CorrelationDataProvider;
 
 public class AxonUtils {
 
@@ -49,6 +52,15 @@ public class AxonUtils {
 	public static boolean isEventHandler(final Class<?> targetClass) {
 		return isNotAggregateRoot(targetClass) && isNotEventHandlerSubclass(targetClass)
 				&& hasEventHandlerMethod(targetClass);
+	}
+
+	public static boolean isCorrelationDataProvider(final Class<?> targetClass) {
+		return CorrelationDataProvider.class.isAssignableFrom(targetClass)
+				&& !Modifier.isAbstract(targetClass.getModifiers());
+	}
+
+	public static boolean isCommandGateway(final Class<?> targetClass) {
+		return CommandGateway.class.isAssignableFrom(targetClass);
 	}
 
 	public static boolean isNotCommandHandlerSubclass(final Class<?> beanClass) {
@@ -182,5 +194,10 @@ public class AxonUtils {
 		void doWith(Method method) throws IllegalArgumentException, IllegalAccessException;
 
 	}
+
+	public static String lcFirst(final String string) {
+		Objects.requireNonNull(string);
+        return string.substring(0, 1).toLowerCase() + string.substring(1);
+    }
 
 }

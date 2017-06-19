@@ -1,1 +1,1 @@
-it.kamaladafrica.cdi.axonframework.extension.AxonCdiExtension
+it.kamaladafrica.cdi.axonframework.extension.CdiAxonAutoConfigurerExtension

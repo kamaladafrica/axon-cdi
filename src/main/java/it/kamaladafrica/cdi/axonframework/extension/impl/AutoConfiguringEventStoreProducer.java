@@ -60,10 +60,12 @@ public class AutoConfiguringEventStoreProducer<X extends EventStore> extends
 		return eventStore;
 	}
 
+//	TODO
 	private void registerEventScheduler(final X eventStore) {
 		new SimpleEventScheduler(Executors.newSingleThreadScheduledExecutor(), eventStore);
 	}
 
+//	TODO comme pour le SagaConfiguration
 	// Cf. EventHandlingConfiguration
 	private void registerEventHandlers(final X eventStore, final TokenStore tokenStore, Set<Annotation> qualifiers) {
 		for (HandlerInfo eventHandlerInfo : eventHandlersInfo) {
@@ -85,6 +87,7 @@ public class AutoConfiguringEventStoreProducer<X extends EventStore> extends
 		}
 	}
 
+//	géré !!
 	// cf. SagaConfiguration
     @SuppressWarnings({"unchecked", "rawtypes"})
 	private void registerSagaManager(final X eventStore, final TokenStore tokenStore, Set<Annotation> qualifiers) {
