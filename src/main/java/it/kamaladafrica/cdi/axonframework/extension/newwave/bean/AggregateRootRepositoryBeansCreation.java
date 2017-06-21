@@ -1,12 +1,7 @@
 package it.kamaladafrica.cdi.axonframework.extension.newwave.bean;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.util.Objects;
-import java.util.Set;
-import java.util.function.Function;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.spi.AnnotatedType;
@@ -22,43 +17,27 @@ import org.axonframework.config.Configuration;
 import com.google.common.base.Strings;
 
 import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo.QualifierType;
 import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
 
-public class AggregateRootRepositoriesBeansCreation extends AbstractBeansCreation {
+public class AggregateRootRepositoryBeansCreation extends AbstractBeanCreation {
 
-	private final Set<AggregateRootBeanInfo> aggregateRootBeanInfos;
-
-	public AggregateRootRepositoriesBeansCreation(final BeansCreation original, final Set<AggregateRootBeanInfo> aggregateRootBeanInfos) {
+	public AggregateRootRepositoryBeansCreation(final BeanCreation original) {
 		super(original);
-		this.aggregateRootBeanInfos = Objects.requireNonNull(aggregateRootBeanInfos);
 	}
 
 	@Override
-	protected Set<Bean<?>> concreateCreateBean(final BeanManager beanManager, final Set<Annotation> normalizedQualifiers, final Configuration configuration) {
+	protected Bean<?> concreateCreateBean(final BeanManager beanManager, final AggregateRootBeanInfo aggregateRootBeanInfo, final Configuration configuration) {
 		Objects.requireNonNull(beanManager);
-		Objects.requireNonNull(normalizedQualifiers);
+		Objects.requireNonNull(aggregateRootBeanInfo);
 		Objects.requireNonNull(configuration);
-		return aggregateRootBeanInfos.stream().filter(new Predicate<AggregateRootBeanInfo>() {
-
-			@Override
-			public boolean test(final AggregateRootBeanInfo aggregateRootInfo) {
-				return CdiUtils.qualifiersMatch(aggregateRootInfo.normalizedQualifiers(), normalizedQualifiers);
-			}
-
-		}).map(new Function<AggregateRootBeanInfo, Bean<?>>() {
-
-			@Override
-			public Bean<?> apply(final AggregateRootBeanInfo aggregateRootBeanInfo) {
-				return createRepositoryBean(beanManager, aggregateRootBeanInfo, normalizedQualifiers, configuration);
-			}
-
-		}).collect(Collectors.toSet());
+		Bean<?> aggregateRootRepositoryBean = createRepositoryBean(beanManager, aggregateRootBeanInfo, configuration);
+		return aggregateRootRepositoryBean;
 	}
 
 	@SuppressWarnings("unchecked")
 	private <T> Bean<Repository<T>> createRepositoryBean(
-			final BeanManager beanManager, final AggregateRootBeanInfo aggregateRootBeanInfo, final Set<Annotation> normalizedQualifiers,
-			final Configuration configuration) {
+			final BeanManager beanManager, final AggregateRootBeanInfo aggregateRootBeanInfo, final Configuration configuration) {
 
 		BeanBuilder<T> aggregateRootBean = new BeanBuilder<T>(beanManager)
 				.readFromType((AnnotatedType<T>) aggregateRootBeanInfo.annotatedType());
@@ -69,7 +48,7 @@ public class AggregateRootRepositoriesBeansCreation extends AbstractBeansCreatio
 		BeanBuilder<Repository<T>> builderRepository = new BeanBuilder<Repository<T>>(
 				beanManager)
 						.beanClass(Repository.class)
-						.qualifiers(normalizedQualifiers)
+						.qualifiers(aggregateRootBeanInfo.qualifiers(QualifierType.DEFAULT))
 						.alternative(aggregateRootBean.isAlternative())
 						.nullable(aggregateRootBean.isNullable())
 						.types(CdiUtils.typeClosure(repositoryType))

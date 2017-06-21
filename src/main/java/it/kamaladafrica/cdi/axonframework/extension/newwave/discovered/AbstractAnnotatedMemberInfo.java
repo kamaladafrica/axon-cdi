@@ -34,4 +34,29 @@ public abstract class AbstractAnnotatedMemberInfo {
 		return CdiUtils.normalizedQualifiers(qualifiers);
 	}
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((annotatedMember == null) ? 0 : annotatedMember.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		AbstractAnnotatedMemberInfo other = (AbstractAnnotatedMemberInfo) obj;
+		if (annotatedMember == null) {
+			if (other.annotatedMember != null)
+				return false;
+		} else if (!annotatedMember.equals(other.annotatedMember))
+			return false;
+		return true;
+	}
+
 }

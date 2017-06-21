@@ -1,42 +1,30 @@
 package it.kamaladafrica.cdi.axonframework.extension;
 
 import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.enterprise.event.Observes;
 import javax.enterprise.inject.spi.AfterBeanDiscovery;
 import javax.enterprise.inject.spi.AfterDeploymentValidation;
-import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
-import javax.enterprise.inject.spi.ProcessProducer;
 
-import org.axonframework.commandhandling.CommandBus;
-import org.axonframework.commandhandling.gateway.CommandGateway;
-import org.axonframework.commandhandling.model.Aggregate;
-import org.axonframework.common.transaction.TransactionManager;
 import org.axonframework.config.Configuration;
 import org.axonframework.config.Configurer;
 import org.axonframework.config.DefaultConfigurer;
-import org.axonframework.eventhandling.EventBus;
-import org.axonframework.eventhandling.saga.ResourceInjector;
-import org.axonframework.eventhandling.saga.Saga;
-import org.axonframework.eventhandling.saga.repository.SagaStore;
-import org.axonframework.eventhandling.tokenstore.TokenStore;
-import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
-import org.axonframework.messaging.correlation.CorrelationDataProvider;
-import org.axonframework.serialization.Serializer;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 
-import it.kamaladafrica.cdi.axonframework.AutoConfigure;
-import it.kamaladafrica.cdi.axonframework.extension.newwave.bean.AggregateRootRepositoriesBeansCreation;
-import it.kamaladafrica.cdi.axonframework.extension.newwave.bean.BeansCreation;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.bean.AggregateRootRepositoryBeansCreation;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.bean.BeanCreation;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.bean.BeansCreationEntryPoint;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.bean.CommandGatewayBeanCreation;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.bean.EventSchedulerBeanCreation;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.bean.SnapshotterBeanCreation;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.configurer.AggregatesCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.configurer.AxonCdiConfigurationEntryPoint;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.configurer.AxonCdiConfigurer;
@@ -51,12 +39,11 @@ import it.kamaladafrica.cdi.axonframework.extension.newwave.configurer.PlatformT
 import it.kamaladafrica.cdi.axonframework.extension.newwave.configurer.ResourceInjectorCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.configurer.SagaConfigurationsCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.configurer.SerializerCdiConfigurer;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.configurer.SnapshotterTriggerDefinitionCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.configurer.TokenStoreCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.configurer.TransactionManagerCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo;
-import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.CommandGatewayProvidedInfo;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.CommandHandlerBeanInfo;
-import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.CorrelationDataProvidedInfo;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.EventHandlerBeanInfo;
 import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.SagaBeanInfo;
 import it.kamaladafrica.cdi.axonframework.support.AxonUtils;
@@ -65,41 +52,22 @@ import it.kamaladafrica.cdi.axonframework.support.AxonUtils;
  * Original: SpringAxonAutoConfigurer
  */
 /**
- * ImportBeanDefinitionRegistrar implementation that sets up an infrastructure Configuration based on beans available
- * in the application context.
- * <p>
- * This component is backed by a DefaultConfiguration (see {@link DefaultConfigurer#defaultConfiguration()}
- * and registers the following beans if present in the ApplicationContext:
- * <ul>
- * <li>{@link CommandBus}</li>
- * <li>{@link EventStorageEngine} or {@link EventBus}</li>
- * <li>{@link Serializer}</li>
- * <li>{@link TokenStore}</li>
- * <li>{@link PlatformTransactionManager}</li>
- * <li>{@link TransactionManager}</li>
- * <li>{@link SagaStore}</li>
- * <li>{@link ResourceInjector} (which defaults to {@link SpringResourceInjector}</li>
- * </ul>
- * <p>
- * Furthermore, all beans with an {@link Aggregate @Aggregate} or {@link Saga @Saga} annotation are inspected and
- * required components to operate the Aggregate or Saga are registered.
+ * TODO explain why bean reference are proxified
+ * @author damien
  *
- * @see EnableAxon
  */
 public class CdiAxonAutoConfigurerExtension implements Extension {
 
+	private static final Logger LOGGER = Logger.getLogger(CdiAxonAutoConfigurerExtension.class.getName());
+
 	/**
-	 * The entry point in an axon application is the command gateway
-	 * So configurations are linked with command gateways
+	 * The entry point in an axon application is defined on AggregateRoot using @AggregateConfiguration (or annotation using it) or not
+	 * @AggregateConfiguration give special setup
+	 * Loop throught AggregateRootBeanInfo to get data
 	 */
-
-	private final Set<CommandGatewayProvidedInfo> commandGatewayProvidedInfos = Sets.newHashSet();
-
 	private final Set<AggregateRootBeanInfo> aggregateRootBeanInfos = Sets.newHashSet();
 
 	private final Set<SagaBeanInfo> sagaBeanInfos = Sets.newHashSet();
-
-	private final Set<CorrelationDataProvidedInfo> correlationDataProvidedInfos = Sets.newHashSet();
 
 	private final Set<CommandHandlerBeanInfo> commandHandlerBeanInfos = Sets.newHashSet(); 
 
@@ -108,42 +76,23 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 	//private final Set<Configurer> configurers = Sets.newHashSet();
 	private final Set<Configuration> configurations = Sets.newHashSet();
 
-	// producer
-	<T, X extends CommandGateway> void processCommandGatewayProducer(
-			@Observes final ProcessProducer<T, X> processProducer,
-			final BeanManager beanManager) {
-		AnnotatedMember<T> annotatedMember = processProducer.getAnnotatedMember();
-		if (annotatedMember.isAnnotationPresent(AutoConfigure.class)) {
-			commandGatewayProvidedInfos.add(new CommandGatewayProvidedInfo(annotatedMember));
-		}
-	}
-
-	<T, X extends CorrelationDataProvider> void processCorrelationDataProviderProducer(
-			@Observes final ProcessProducer<T, X> processProducer,
-			final BeanManager beanManager) {
-		AnnotatedMember<T> annotatedMember = processProducer.getAnnotatedMember();
-		if (annotatedMember.isAnnotationPresent(AutoConfigure.class)) {
-			correlationDataProvidedInfos.add(new CorrelationDataProvidedInfo(annotatedMember));
-		}
-	}
-
 	// lookup types bean
 	<X> void processAggregateRootBeanAnnotatedType(
 			@Observes final ProcessAnnotatedType<X> pat,
 			final BeanManager beanManager) {
-		AnnotatedType<X> at = pat.getAnnotatedType();
-		boolean isAggregateRoot = AxonUtils.isAnnotatedAggregateRoot(at.getJavaClass());
+		AnnotatedType<X> annotatedType = pat.getAnnotatedType();
+		boolean isAggregateRoot = AxonUtils.isAnnotatedAggregateRoot(annotatedType.getJavaClass());
 		if (isAggregateRoot) {
-			aggregateRootBeanInfos.add(new AggregateRootBeanInfo(at));
+			aggregateRootBeanInfos.add(AggregateRootBeanInfo.of(beanManager, annotatedType));
 			pat.veto();
 		}
 	}
 
 	<X> void processSagaBeanAnnotatedType(
 			@Observes final ProcessAnnotatedType<X> pat, final BeanManager beanManager) {
-		AnnotatedType<X> at = pat.getAnnotatedType();
-		if (AxonUtils.isAnnotatedSaga(at.getJavaClass())) {
-			sagaBeanInfos.add(new SagaBeanInfo(at));
+		AnnotatedType<X> annotatedType = pat.getAnnotatedType();
+		if (AxonUtils.isAnnotatedSaga(annotatedType.getJavaClass())) {
+			sagaBeanInfos.add(SagaBeanInfo.of(beanManager, annotatedType));
 			// pat.veto(); // don't veto this bean. Because we need it to discover EventScheduler injected beans
 		}
 	}
@@ -169,34 +118,46 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 	 * @throws Exception 
 	 */
 	<T> void afterBeanDiscovery(@Observes final AfterBeanDiscovery afd, final BeanManager bm) throws Exception {
-		for (CommandGatewayProvidedInfo commandGatewayProvidedInfo : commandGatewayProvidedInfos) {
-			// create and setup configurer
-			AxonCdiConfigurer axonCdiConfiguration =
-				new EventHandlersCdiConfigurer(
-					new CommandHandlersCdiConfigurer(
-						new SagaConfigurationsCdiConfigurer(
-							new AggregatesCdiConfigurer(
-								new CorrelationDataProviderCdiConfigurer(
-									new ResourceInjectorCdiConfigurer(
-										new TransactionManagerCdiConfigurer(
-											new PlatformTransactionManagerCdiConfigurer(
-												new TokenStoreCdiConfigurer(
-													new SerializerCdiConfigurer(
-														new EventBusCdiConfigurer(
-															new EventStorageEngineCdiConfigurer(
-																new CommandBusCdiConfigurer(
-																	new ParameterResolverCdiConfigurer(
-																		new AxonCdiConfigurationEntryPoint()))))))))), correlationDataProvidedInfos), aggregateRootBeanInfos), sagaBeanInfos), commandHandlerBeanInfos), eventHandlerBeanInfos);
-			Configurer configurer = axonCdiConfiguration.setUp(DefaultConfigurer.defaultConfiguration(), bm, commandGatewayProvidedInfo.normalizedQualifiers());
-			Configuration configuration = configurer.buildConfiguration();
-			// create cdi bean from configurer (repositories, event handlers, command handlers, event schedulers, command gateway)
-			BeansCreation beansCreation =
-				new CommandGatewayBeanCreation(
-					new EventSchedulerBeanCreation(
-						new AggregateRootRepositoriesBeansCreation(
-							new BeansCreationEntryPoint(), aggregateRootBeanInfos)));
-			beansCreation.create(afd, bm, commandGatewayProvidedInfo.normalizedQualifiers(), configuration);			
-			configurations.add(configuration);
+		LOGGER.log(Level.INFO, "Axon CDI Extension - Activated");
+		for (AggregateRootBeanInfo aggregateRootBeanInfo : aggregateRootBeanInfos) {
+			
+//			TON CODE ne marche pas ...
+//			Plusieurs aggregats peuvent partager la meme conf. IE le meme command bus
+//			Du coup ma methode setUp doit prendre une liste d'aggregats !!!
+//			Ayant les memes qualifiers !!! Sur le type desirée !!!
+//			C'est chaud !!!
+//			Je 
+//			// Create and setup configurer
+//			AxonCdiConfigurer axonCdiConfiguration =
+//				new SnapshotterTriggerDefinitionCdiConfigurer(
+//					new EventHandlersCdiConfigurer(
+//						new CommandHandlersCdiConfigurer(
+//							new SagaConfigurationsCdiConfigurer(
+//								new AggregatesCdiConfigurer(
+//									new CorrelationDataProviderCdiConfigurer(
+//										new ResourceInjectorCdiConfigurer(
+//											new TransactionManagerCdiConfigurer(
+//												new PlatformTransactionManagerCdiConfigurer(
+//													new TokenStoreCdiConfigurer(
+//														new SerializerCdiConfigurer(
+//															new EventBusCdiConfigurer(
+//																new EventStorageEngineCdiConfigurer(
+//																	new CommandBusCdiConfigurer(
+//																		new ParameterResolverCdiConfigurer(
+//																			new AxonCdiConfigurationEntryPoint()))))))))))), sagaBeanInfos), commandHandlerBeanInfos), eventHandlerBeanInfos));
+//			Configurer configurer = axonCdiConfiguration.setUp(DefaultConfigurer.defaultConfiguration(), bm, aggregateRootBeanInfo);
+//			// create *configuration* from previous setup configurer
+//			Configuration configuration = configurer.buildConfiguration();
+			// Create cdi bean from configuration (repositories, event handlers, command handlers, event schedulers, command gateway)
+//			BeanCreation beansCreation =
+//				new (
+//					new CommandGatewayBeanCreation(
+//						new EventSchedulerBeanCreation(
+//							new AggregateRootRepositoryBeansCreation(
+//									new BeansCreationEntryPoint()))));
+//			beansCreation.create(afd, bm, aggregateRootBeanInfo, configuration);
+//			configurations.add(configuration);
+//			new SnapshotterBeanCreation(aggregateRootBeanInfo, configuration);PUTAIIN je suis nicker car je prends la conf en entrée !!!
 		}
 	}
 
@@ -206,7 +167,9 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 	 * @param bm
 	 */
 	void afterDeploymentValidation(@Observes final AfterDeploymentValidation adv, final BeanManager bm) {
+		LOGGER.log(Level.INFO, "Axon CDI Extension - Starting");
 		configurations.stream().forEach(configuration -> configuration.start());
+		LOGGER.log(Level.INFO, "Axon CDI Extension - Started");
 	}
 
 }

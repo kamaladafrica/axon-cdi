@@ -1,11 +1,9 @@
 package it.kamaladafrica.cdi.axonframework.extension.newwave.configurer;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
@@ -13,9 +11,8 @@ import javax.enterprise.inject.spi.BeanManager;
 import org.axonframework.config.Configurer;
 import org.axonframework.serialization.Serializer;
 
-import com.google.common.collect.ImmutableSet;
-
-import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo.QualifierType;
 
 public class SerializerCdiConfigurer extends AbstractCdiConfiguration {
 
@@ -24,16 +21,16 @@ public class SerializerCdiConfigurer extends AbstractCdiConfiguration {
 	}
 
 	@Override
-	protected void concreateCdiSetUp(final Configurer configurer, final BeanManager beanManager, final Set<Annotation> normalizedQualifiers) throws Exception {
+	protected void concreateCdiSetUp(final Configurer configurer, final BeanManager beanManager, final AggregateRootBeanInfo aggregateRootBeanInfo) throws Exception {
 		Objects.requireNonNull(configurer);
 		Objects.requireNonNull(beanManager);
-		Objects.requireNonNull(normalizedQualifiers);
-		Bean<?> bean = CdiUtils.getBean(beanManager, Serializer.class, normalizedQualifiers);
+		Objects.requireNonNull(aggregateRootBeanInfo);
+		Bean<?> bean = aggregateRootBeanInfo.resolveBean(beanManager, QualifierType.SERIALIZER);
 		if (bean != null) {
 			Serializer serializer = (Serializer) Proxy.newProxyInstance(
 					Serializer.class.getClassLoader(),
 					new Class[] { Serializer.class },
-					new SerializerInvocationHandler(beanManager, normalizedQualifiers));
+					new SerializerInvocationHandler(beanManager, aggregateRootBeanInfo));
 			configurer.configureSerializer(c -> serializer);
 		}
 	}
@@ -41,19 +38,18 @@ public class SerializerCdiConfigurer extends AbstractCdiConfiguration {
 	private class SerializerInvocationHandler implements InvocationHandler {
 
 		private final BeanManager beanManager;
-		private final Set<Annotation> qualifiers;
+		private final AggregateRootBeanInfo aggregateRootBeanInfo;
 		private Serializer serializer;
 
-		public SerializerInvocationHandler(final BeanManager beanManager, final Set<Annotation> normalizedQualifiers) {
+		public SerializerInvocationHandler(final BeanManager beanManager, final AggregateRootBeanInfo aggregateRootBeanInfo) {
 			this.beanManager = Objects.requireNonNull(beanManager);
-			Objects.requireNonNull(normalizedQualifiers);
-			this.qualifiers = ImmutableSet.copyOf(normalizedQualifiers);
+			this.aggregateRootBeanInfo = Objects.requireNonNull(aggregateRootBeanInfo);
 		}
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 			if (serializer == null) {
-				serializer = (Serializer) CdiUtils.getReference(beanManager, Serializer.class, qualifiers);
+				serializer = (Serializer) aggregateRootBeanInfo.getReference(beanManager, QualifierType.SERIALIZER);
 			}
 			return method.invoke(serializer, args);
 		}

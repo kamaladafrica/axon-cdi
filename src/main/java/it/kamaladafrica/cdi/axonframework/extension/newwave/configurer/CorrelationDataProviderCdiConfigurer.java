@@ -1,10 +1,8 @@
 package it.kamaladafrica.cdi.axonframework.extension.newwave.configurer;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -17,43 +15,36 @@ import javax.enterprise.inject.spi.BeanManager;
 import org.axonframework.config.Configurer;
 import org.axonframework.messaging.correlation.CorrelationDataProvider;
 
-import com.google.common.collect.ImmutableSet;
-
-import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.CorrelationDataProvidedInfo;
-import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo.QualifierType;
 
 public class CorrelationDataProviderCdiConfigurer extends AbstractCdiConfiguration {
 
-	private final Set<CorrelationDataProvidedInfo> correlationDataProvidedInfos;
-
-	public CorrelationDataProviderCdiConfigurer(final AxonCdiConfigurer original, final Set<CorrelationDataProvidedInfo> correlationDataProviderInfos) {
+	public CorrelationDataProviderCdiConfigurer(final AxonCdiConfigurer original) {
 		super(original);
-		this.correlationDataProvidedInfos = correlationDataProviderInfos;
 	}
 
 	@Override
-	protected void concreateCdiSetUp(final Configurer configurer, final BeanManager beanManager, final Set<Annotation> normalizedQualifiers) throws Exception {
+	protected void concreateCdiSetUp(final Configurer configurer, final BeanManager beanManager, final AggregateRootBeanInfo aggregateRootBeanInfo) throws Exception {
 		Objects.requireNonNull(configurer);
 		Objects.requireNonNull(beanManager);
-		Objects.requireNonNull(normalizedQualifiers);
-		List<CorrelationDataProvider> correlationDataProviders = new ArrayList<>();
-		for (CorrelationDataProvidedInfo correlationDataProvidedInfo : correlationDataProvidedInfos) {
-			if (CdiUtils.qualifiersMatch(correlationDataProvidedInfo.normalizedQualifiers(), normalizedQualifiers)) {
-				correlationDataProviders.addAll(CdiUtils.getBeans(beanManager, CorrelationDataProvider.class, normalizedQualifiers)
-						.stream()
-						.map(new Function<Bean<?>, CorrelationDataProvider>() {
+		Objects.requireNonNull(aggregateRootBeanInfo);
 
-							@Override
-							public CorrelationDataProvider apply(final Bean<?> bean) {
-								return (CorrelationDataProvider) Proxy.newProxyInstance(
-										CorrelationDataProvider.class.getClassLoader(),
-										new Class[] { CorrelationDataProvider.class },
-										new CorrelationDataProviderInvocationHandler(beanManager, normalizedQualifiers));
-							}
+		Set<Bean<?>> beansCorrelationProvider = aggregateRootBeanInfo.getBeans(beanManager, QualifierType.CORRELATION_DATA_PROVIDER);
+		List<CorrelationDataProvider> correlationDataProviders = beansCorrelationProvider.stream()
+				.map(new Function<Bean<?>, CorrelationDataProvider>() {
 
-						}).collect(Collectors.toList()));
-			}
-		}
+					@Override
+					public CorrelationDataProvider apply(final Bean<?> bean) {
+						// que dois je faire de mon objet bean ???
+						return (CorrelationDataProvider) Proxy.newProxyInstance(
+								CorrelationDataProvider.class.getClassLoader(),
+								new Class[] { CorrelationDataProvider.class },
+								new CorrelationDataProviderInvocationHandler(beanManager, bean, aggregateRootBeanInfo));
+					}
+
+				}).collect(Collectors.toList());
+
 		if (!correlationDataProviders.isEmpty()) {
 			configurer.configureCorrelationDataProviders(c -> correlationDataProviders);
 		}
@@ -62,19 +53,20 @@ public class CorrelationDataProviderCdiConfigurer extends AbstractCdiConfigurati
 	private class CorrelationDataProviderInvocationHandler implements InvocationHandler {
 
 		private final BeanManager beanManager;
-		private final Set<Annotation> qualifiers;
+		private final Bean<?> bean;
+		private final AggregateRootBeanInfo aggregateRootBeanInfo;
 		private CorrelationDataProvider correlationDataProvider;
 
-		public CorrelationDataProviderInvocationHandler(final BeanManager beanManager, final Set<Annotation> normalizedQualifiers) {
+		public CorrelationDataProviderInvocationHandler(final BeanManager beanManager, final Bean<?> bean, final AggregateRootBeanInfo aggregateRootBeanInfo) {
 			this.beanManager = Objects.requireNonNull(beanManager);
-			Objects.requireNonNull(normalizedQualifiers);
-			this.qualifiers = ImmutableSet.copyOf(normalizedQualifiers);
+			this.bean = Objects.requireNonNull(bean);
+			this.aggregateRootBeanInfo = Objects.requireNonNull(aggregateRootBeanInfo);
 		}
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 			if (correlationDataProvider == null) {
-				correlationDataProvider = (CorrelationDataProvider) CdiUtils.getReference(beanManager, CorrelationDataProvider.class, qualifiers);
+				correlationDataProvider = (CorrelationDataProvider) aggregateRootBeanInfo.getReference(beanManager, bean);
 			}
 			return method.invoke(correlationDataProvider, args);
 		}

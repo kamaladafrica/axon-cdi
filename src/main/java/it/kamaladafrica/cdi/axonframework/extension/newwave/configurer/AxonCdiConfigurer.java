@@ -1,14 +1,13 @@
 package it.kamaladafrica.cdi.axonframework.extension.newwave.configurer;
 
-import java.lang.annotation.Annotation;
-import java.util.Set;
-
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.axonframework.config.Configurer;
 
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo;
+
 public interface AxonCdiConfigurer {
 
-	Configurer setUp(Configurer configurer, BeanManager beanManager, Set<Annotation> qualifiers) throws Exception;
+	Configurer setUp(Configurer configurer, BeanManager beanManager, AggregateRootBeanInfo aggregateRootBeanInfo) throws Exception;
 
 }

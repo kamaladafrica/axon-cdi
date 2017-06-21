@@ -1,9 +1,6 @@
 package it.kamaladafrica.cdi.axonframework.extension.newwave.bean;
 
-import java.lang.annotation.Annotation;
-import java.util.Collections;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.Executors;
 
 import javax.enterprise.context.spi.CreationalContext;
@@ -16,29 +13,32 @@ import org.axonframework.config.Configuration;
 import org.axonframework.eventhandling.scheduling.EventScheduler;
 import org.axonframework.eventhandling.scheduling.java.SimpleEventScheduler;
 
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo.QualifierType;
+
 // cf.SimpleEventSchedulerFactoryBean
 // not used in the DefaultConfigurer
-public class EventSchedulerBeanCreation extends AbstractBeansCreation {
+public class EventSchedulerBeanCreation extends AbstractBeanCreation {
 
-	public EventSchedulerBeanCreation(final BeansCreation original) {
+	public EventSchedulerBeanCreation(final BeanCreation original) {
 		super(original);
 	}
 
 	@Override
-	protected Set<Bean<?>> concreateCreateBean(final BeanManager beanManager, final Set<Annotation> normalizedQualifiers,
+	protected Bean<?> concreateCreateBean(final BeanManager beanManager, final AggregateRootBeanInfo aggregateRootBeanInfo,
 				final Configuration configuration) {
 		Objects.requireNonNull(beanManager);
-		Objects.requireNonNull(normalizedQualifiers);
+		Objects.requireNonNull(aggregateRootBeanInfo);
 		Objects.requireNonNull(configuration);
 		
 		BeanBuilder<EventScheduler> builder = new BeanBuilder<EventScheduler>(beanManager)
 			.beanClass(EventScheduler.class)
-			.qualifiers(normalizedQualifiers)
+			.qualifiers(aggregateRootBeanInfo.qualifiers(QualifierType.EVENT_SCHEDULER))
 			.types(EventScheduler.class)
 			.beanLifecycle(
 				new SimpleEventSchedulerContextualLifecycle<EventScheduler>(configuration));
 		Bean<?> eventSchedulerBean = builder.create();
-		return Collections.singleton(eventSchedulerBean);
+		return eventSchedulerBean;
 	}
 
 	private class SimpleEventSchedulerContextualLifecycle<T extends EventScheduler> implements ContextualLifecycle<T> {

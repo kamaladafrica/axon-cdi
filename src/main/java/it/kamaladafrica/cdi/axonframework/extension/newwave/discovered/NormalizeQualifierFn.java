@@ -1,4 +1,4 @@
-package it.kamaladafrica.cdi.axonframework.extension.impl;
+package it.kamaladafrica.cdi.axonframework.extension.newwave.discovered;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
@@ -17,4 +17,5 @@ class NormalizeQualifierFn implements Function<Set<Annotation>, Set<Annotation>>
 	public Set<Annotation> apply(final Set<Annotation> input) {
 		return CdiUtils.normalizedQualifiers(input);
 	}
+
 }

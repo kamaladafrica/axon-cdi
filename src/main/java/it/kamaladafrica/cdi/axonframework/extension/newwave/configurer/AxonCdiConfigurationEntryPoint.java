@@ -1,20 +1,20 @@
 package it.kamaladafrica.cdi.axonframework.extension.newwave.configurer;
 
-import java.lang.annotation.Annotation;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.axonframework.config.Configurer;
 
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo;
+
 public class AxonCdiConfigurationEntryPoint implements AxonCdiConfigurer {
 
 	@Override
-	public Configurer setUp(final Configurer configurer, final BeanManager beanManager, final Set<Annotation> qualifiers) {
+	public Configurer setUp(final Configurer configurer, final BeanManager beanManager, final AggregateRootBeanInfo aggregateRootBeanInfo) {
 		Objects.requireNonNull(configurer);
 		Objects.requireNonNull(beanManager);
-		Objects.requireNonNull(qualifiers);
+		Objects.requireNonNull(aggregateRootBeanInfo);
 		return configurer;
 	}
 

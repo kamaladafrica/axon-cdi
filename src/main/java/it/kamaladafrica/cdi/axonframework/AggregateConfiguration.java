@@ -14,14 +14,24 @@ public @interface AggregateConfiguration {
 
 	Class<?> value() default InheritQualifiers.class;
 
-	Class<?> repository() default InheritQualifiers.class;
-
 	Class<?> eventBus() default InheritQualifiers.class;
 
 	Class<?> commandBus() default InheritQualifiers.class;
 
+	Class<?> commandGateway() default InheritQualifiers.class;
+	
 	Class<?> snapshotterTriggerDefinition() default InheritQualifiers.class;
 
-	Class<?> snapshotter() default InheritQualifiers.class;
+	Class<?> tokenStore() default InheritQualifiers.class;
+
+	Class<?> transactionManager() default InheritQualifiers.class;
+
+	Class<?> serializer() default InheritQualifiers.class;
+
+	Class<?> eventStorageEngine() default InheritQualifiers.class;
+
+	Class<?> eventScheduler() default InheritQualifiers.class;
+
+	Class<?> correlationDataProvider() default InheritQualifiers.class;
 
 }

@@ -14,10 +14,8 @@ public @interface SagaConfiguration {
 
 	Class<?> value() default DefaultQualifierMeme.class;
 
-	Class<?> repository() default DefaultQualifierMeme.class;
-
-	Class<?> factory() default DefaultQualifierMeme.class;
-
 	Class<?> eventBus() default DefaultQualifierMeme.class;
+
+	Class<?> sagaStore() default DefaultQualifierMeme.class;
 
 }

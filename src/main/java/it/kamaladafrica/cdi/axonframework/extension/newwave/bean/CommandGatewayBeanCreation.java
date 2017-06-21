@@ -1,9 +1,6 @@
 package it.kamaladafrica.cdi.axonframework.extension.newwave.bean;
 
-import java.lang.annotation.Annotation;
-import java.util.Collections;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.spi.CreationalContext;
@@ -15,34 +12,35 @@ import org.apache.deltaspike.core.util.metadata.builder.ContextualLifecycle;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.Configuration;
 
-import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo;
+import it.kamaladafrica.cdi.axonframework.extension.newwave.discovered.AggregateRootBeanInfo.QualifierType;
 
-public class CommandGatewayBeanCreation extends AbstractBeansCreation {
+public class CommandGatewayBeanCreation extends AbstractBeanCreation {
 
-	public CommandGatewayBeanCreation(final BeansCreation original) {
+	public CommandGatewayBeanCreation(final BeanCreation original) {
 		super(original);
 	}
 
 	@Override
-	protected Set<Bean<?>> concreateCreateBean(final BeanManager beanManager, final Set<Annotation> normalizedQualifiers,
+	protected Bean<?> concreateCreateBean(final BeanManager beanManager, final AggregateRootBeanInfo aggregateRootBeanInfo,
 			final Configuration configuration) {
 		Objects.requireNonNull(beanManager);
-		Objects.requireNonNull(normalizedQualifiers);
+		Objects.requireNonNull(aggregateRootBeanInfo);
 		Objects.requireNonNull(configuration);
-		if (CdiUtils.getBean(beanManager, CommandGateway.class, normalizedQualifiers) == null) {
+		if (aggregateRootBeanInfo.resolveBean(beanManager, QualifierType.COMMAND_GATEWAY) == null) {
 			// No CommandGateway has been Produces so create a default one from *configuration* ^^
 			// It can be injected in facade next :)
 			BeanBuilder<CommandGateway> builder = new BeanBuilder<CommandGateway>(beanManager)
 				.beanClass(CommandGateway.class)
-				.qualifiers(normalizedQualifiers)
+				.qualifiers(aggregateRootBeanInfo.qualifiers(QualifierType.COMMAND_GATEWAY))
 				.types(CommandGateway.class)
 				.scope(ApplicationScoped.class)
 				.beanLifecycle(
 					new CommandGatewayContextualLifeCycle<CommandGateway>(configuration));
 			Bean<?> commandGatewayBean = builder.create();
-			return Collections.singleton(commandGatewayBean);
+			return commandGatewayBean;
 		}
-		return Collections.<Bean<?>> emptySet();
+		return null;
 	}
 
 	private class CommandGatewayContextualLifeCycle<T extends CommandGateway> implements ContextualLifecycle<T> {
