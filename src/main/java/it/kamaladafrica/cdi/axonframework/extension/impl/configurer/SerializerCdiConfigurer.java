@@ -23,7 +23,7 @@ public class SerializerCdiConfigurer extends AbstractCdiConfiguration {
 		Objects.requireNonNull(configurer);
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
-		if (!executionContext.hasASerializerBean(beanManager)) {
+		if (executionContext.hasASerializerBean(beanManager)) {
 			Serializer serializer = (Serializer) Proxy.newProxyInstance(
 				Serializer.class.getClassLoader(),
 				new Class[] { Serializer.class },

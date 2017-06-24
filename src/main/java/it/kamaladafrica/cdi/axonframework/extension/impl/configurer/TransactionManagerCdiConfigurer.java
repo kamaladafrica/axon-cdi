@@ -24,7 +24,7 @@ public class TransactionManagerCdiConfigurer extends AbstractCdiConfiguration {
 		Objects.requireNonNull(configurer);
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
-		if (!executionContext.hasATransactionManagerBean(beanManager)) {
+		if (executionContext.hasATransactionManagerBean(beanManager)) {
 			TransactionManager transactionManager = (TransactionManager) Proxy.newProxyInstance(
 				TransactionManager.class.getClassLoader(),
 				new Class[] { TransactionManager.class },

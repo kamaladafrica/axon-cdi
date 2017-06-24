@@ -26,7 +26,7 @@ public class EventBusCdiConfigurer extends AbstractCdiConfiguration {
 		Objects.requireNonNull(configurer);
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
-		if (!executionContext.hasAnEventStoreBean(beanManager)) {
+		if (executionContext.hasAnEventStoreBean(beanManager)) {
 			// must cast to EventStore
 			// or "c.eventBus() instanceof EventStore" in AggregateConfigurer will return false and throw an exception
 			EventStore eventStore = (EventStore) Proxy.newProxyInstance(

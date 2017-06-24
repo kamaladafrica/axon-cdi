@@ -10,10 +10,7 @@ import java.util.Set;
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.axonframework.commandhandling.CommandBus;
-import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.common.transaction.TransactionManager;
-import org.axonframework.eventhandling.EventBus;
-import org.axonframework.eventhandling.scheduling.EventScheduler;
 import org.axonframework.eventhandling.tokenstore.TokenStore;
 import org.axonframework.eventsourcing.SnapshotTriggerDefinition;
 import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
@@ -22,7 +19,6 @@ import org.axonframework.messaging.correlation.CorrelationDataProvider;
 import org.axonframework.serialization.Serializer;
 
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.AggregateRootBeanInfo.QualifierType;
-import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
 
 public class ExecutionContext {
 
@@ -109,65 +105,47 @@ public class ExecutionContext {
 
 	public boolean hasAnEventSchedulerBean(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
-		return CdiUtils.getBean(beanManager,
-				EventScheduler.class,
-				aggregateRootBeanInfos.get(0).qualifiers(QualifierType.EVENT_SCHEDULER)) != null;
+		return aggregateRootBeanInfos.get(0).hasBean(beanManager, QualifierType.EVENT_SCHEDULER);
 	}
 
 	public boolean hasACommandGatewayBean(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
-		return CdiUtils.getBean(beanManager,
-				CommandGateway.class,
-				aggregateRootBeanInfos.get(0).qualifiers(QualifierType.COMMAND_GATEWAY)) != null;
+		return aggregateRootBeanInfos.get(0).hasBean(beanManager, QualifierType.COMMAND_GATEWAY);
 	}
 
 	public boolean hasACommandBusBean(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
-		return CdiUtils.getBean(beanManager,
-				CommandBus.class,
-				aggregateRootBeanInfos.get(0).qualifiers(QualifierType.COMMAND_BUS)) != null;
+		return aggregateRootBeanInfos.get(0).hasBean(beanManager, QualifierType.COMMAND_BUS);
 	}
 
 	public boolean hasAnEventStoreBean(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
-		return CdiUtils.getBean(beanManager,
-				EventBus.class,
-				aggregateRootBeanInfos.get(0).qualifiers(QualifierType.EVENT_BUS)) != null;
+		return aggregateRootBeanInfos.get(0).hasBean(beanManager, QualifierType.EVENT_BUS);
 	}
 
 	public boolean hasAnEventStorageEngineBean(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
-		return CdiUtils.getBean(beanManager,
-				EventStorageEngine.class,
-				aggregateRootBeanInfos.get(0).qualifiers(QualifierType.EVENT_STORAGE_ENGINE)) != null;
+		return aggregateRootBeanInfos.get(0).hasBean(beanManager, QualifierType.EVENT_STORAGE_ENGINE);
 	}
 
 	public boolean hasATransactionManagerBean(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
-		return CdiUtils.getBean(beanManager,
-				EventStorageEngine.class,
-				aggregateRootBeanInfos.get(0).qualifiers(QualifierType.TRANSACTION_MANAGER)) != null;
+		return aggregateRootBeanInfos.get(0).hasBean(beanManager, QualifierType.TRANSACTION_MANAGER);
 	}
 
 	public boolean hasATokenStoreBean(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
-		return CdiUtils.getBean(beanManager,
-				EventStorageEngine.class,
-				aggregateRootBeanInfos.get(0).qualifiers(QualifierType.TOKEN_STORE)) != null;
+		return aggregateRootBeanInfos.get(0).hasBean(beanManager, QualifierType.TOKEN_STORE);
 	}
 
 	public boolean hasASerializerBean(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
-		return CdiUtils.getBean(beanManager,
-				Serializer.class,
-				aggregateRootBeanInfos.get(0).qualifiers(QualifierType.SERIALIZER)) != null;
+		return aggregateRootBeanInfos.get(0).hasBean(beanManager, QualifierType.SERIALIZER);
 	}
 
 	public boolean hasACorrelationDataProviderBean(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
-		return CdiUtils.getBean(beanManager,
-				CorrelationDataProvider.class,
-				aggregateRootBeanInfos.get(0).qualifiers(QualifierType.CORRELATION_DATA_PROVIDER)) != null;
+		return aggregateRootBeanInfos.get(0).hasBean(beanManager, QualifierType.CORRELATION_DATA_PROVIDER);
 	}
 
 	public CommandBus getCommandBusReference(final BeanManager beanManager) {

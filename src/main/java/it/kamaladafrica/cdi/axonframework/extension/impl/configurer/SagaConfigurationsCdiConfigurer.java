@@ -14,6 +14,7 @@ import org.axonframework.eventhandling.saga.repository.SagaStore;
 
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.ExecutionContext;
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.SagaBeanInfo;
+import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.SagaBeanInfo.QualifierType;
 
 public class SagaConfigurationsCdiConfigurer extends AbstractCdiConfiguration {
 
@@ -32,12 +33,12 @@ public class SagaConfigurationsCdiConfigurer extends AbstractCdiConfiguration {
 			.forEach(sagaBeanInfo -> {
 				// can have multiple
 				SagaConfiguration sagaConfiguration = SagaConfiguration.subscribingSagaManager(sagaBeanInfo.type());
-				Bean<?> bean = sagaBeanInfo.resolveSagaStoreBean(beanManager);
-				if (bean != null) {
+				Bean<?> sagaStoreBean = sagaBeanInfo.resolveBean(beanManager, QualifierType.SAGA_STORE);
+				if (sagaStoreBean != null) {
 					sagaConfiguration.configureSagaStore(c -> (SagaStore) Proxy.newProxyInstance(
 						SagaStore.class.getClassLoader(),
 						new Class[] { SagaStore.class },
-						new SagaStoreInvocationHandler(beanManager, sagaBeanInfo, bean)));
+						new SagaStoreInvocationHandler(beanManager, sagaBeanInfo)));
 					SagaConfiguration.trackingSagaManager(sagaBeanInfo.type());
 				}
 				configurer.registerModule(sagaConfiguration);
@@ -48,19 +49,17 @@ public class SagaConfigurationsCdiConfigurer extends AbstractCdiConfiguration {
 
 		private final BeanManager beanManager;
 		private final SagaBeanInfo sagaBeanInfo;
-		private final Bean<?> sagaBean;
 		private SagaStore<?> sagaStore;
 
-		public SagaStoreInvocationHandler(final BeanManager beanManager, final SagaBeanInfo sagaBeanInfo, final Bean<?> sagaBean) {
+		public SagaStoreInvocationHandler(final BeanManager beanManager, final SagaBeanInfo sagaBeanInfo) {
 			this.beanManager = Objects.requireNonNull(beanManager);
 			this.sagaBeanInfo = Objects.requireNonNull(sagaBeanInfo);
-			this.sagaBean = Objects.requireNonNull(sagaBean);
 		}
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 			if (sagaStore == null) {
-				sagaStore = (SagaStore<?>) sagaBeanInfo.getReference(beanManager, sagaBean);
+				sagaStore = (SagaStore<?>) sagaBeanInfo.getReference(beanManager, QualifierType.SAGA_STORE);
 			}
 			return method.invoke(sagaStore, args);
 		}

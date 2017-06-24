@@ -24,7 +24,7 @@ public class CorrelationDataProviderCdiConfigurer extends AbstractCdiConfigurati
 		Objects.requireNonNull(configurer);
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
-		if (!executionContext.hasACorrelationDataProviderBean(beanManager)) {
+		if (executionContext.hasACorrelationDataProviderBean(beanManager)) {
 			Serializer serializer = (Serializer) Proxy.newProxyInstance(
 				Serializer.class.getClassLoader(),
 				new Class[] { Serializer.class },

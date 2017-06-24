@@ -18,17 +18,12 @@ public class CommandBusCdiConfigurer extends AbstractCdiConfiguration {
 		super(original);
 	}
 
-	// Passage par proxy...
-
 	@Override
 	protected void concreateCdiSetUp(final Configurer configurer, final BeanManager beanManager, final ExecutionContext executionContext) throws Exception {
 		Objects.requireNonNull(configurer);
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
-		if (!executionContext.hasACommandBusBean(beanManager)) {
-Je me suis planté
-si je ne n'ai pas de bean je dois le creer
-puis je configure
+		if (executionContext.hasACommandBusBean(beanManager)) {
 			CommandBus commandBus = (CommandBus) Proxy.newProxyInstance(
 				CommandBus.class.getClassLoader(),
 				new Class[] { CommandBus.class },
@@ -51,7 +46,6 @@ puis je configure
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
-// TODO checker quand est il appelé...
 			if (commandBus == null) {
 				commandBus = executionContext.getCommandBusReference(beanManager);
 			}

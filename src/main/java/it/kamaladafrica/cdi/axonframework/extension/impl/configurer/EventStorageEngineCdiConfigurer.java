@@ -23,7 +23,7 @@ public class EventStorageEngineCdiConfigurer extends AbstractCdiConfiguration {
 		Objects.requireNonNull(configurer);
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
-		if (!executionContext.hasAnEventStorageEngineBean(beanManager)) {
+		if (executionContext.hasAnEventStorageEngineBean(beanManager)) {
 			EventStorageEngine eventStorageEngine = (EventStorageEngine) Proxy.newProxyInstance(
 				EventStorageEngine.class.getClassLoader(),
 				new Class[] { EventStorageEngine.class },

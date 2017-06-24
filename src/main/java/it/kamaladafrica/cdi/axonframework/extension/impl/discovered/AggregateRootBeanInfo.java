@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.enterprise.inject.spi.AnnotatedType;
@@ -23,14 +24,11 @@ import org.axonframework.messaging.correlation.CorrelationDataProvider;
 import org.axonframework.serialization.Serializer;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import it.kamaladafrica.cdi.axonframework.AggregateConfiguration;
 import it.kamaladafrica.cdi.axonframework.support.AxonUtils;
 import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
-
-//TODO extends BeanInfo pour mutualisation avec bean info
 
 public class AggregateRootBeanInfo {
 
@@ -176,32 +174,23 @@ public class AggregateRootBeanInfo {
 		qualifiers.put(type, CdiUtils.qualifiers(beanManager, CdiUtils.isInheritMarker(qualifier) ? fallback : qualifier));
 	}
 
-	public Set<Bean<?>> getBeans(final BeanManager beanManager, final QualifierType qualifierType) {
+	public boolean hasBean(final BeanManager beanManager, final QualifierType qualifierType) {
 		Objects.requireNonNull(beanManager);
-		Objects.requireNonNull(qualifierType);
-		Set<Annotation> qualifierSet = qualifiers(qualifierType);
-		final Annotation[] qualifiers = Iterables.toArray(qualifierSet, Annotation.class);
-		return beanManager.getBeans(qualifierType.clazz, qualifiers);
+		return Optional.ofNullable(CdiUtils.getBean(beanManager,
+				qualifierType.clazz,
+				qualifiers(qualifierType))).isPresent();
 	}
 
 	public Bean<?> resolveBean(final BeanManager beanManager, final QualifierType qualifierType) {
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(qualifierType);
-		Set<Bean<?>> beans = getBeans(beanManager, qualifierType);
-		return beanManager.resolve(beans);
+		return CdiUtils.getBean(beanManager, qualifierType.clazz, qualifiers(qualifierType));
 	}
 
 	public Object getReference(final BeanManager beanManager, final QualifierType qualifierType) {
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(qualifierType);
-		Bean<?> bean = resolveBean(beanManager, qualifierType);
-		return beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(null));
-	}
-
-	public Object getReference(final BeanManager beanManager, final Bean<?> bean) {
-		Objects.requireNonNull(beanManager);
-		Objects.requireNonNull(bean);
-		return beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(null));
+		return CdiUtils.getReference(beanManager, qualifierType.clazz, qualifiers(qualifierType));
 	}
 
 	public Class<?> type() {

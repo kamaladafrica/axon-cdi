@@ -23,7 +23,7 @@ public class TokenStoreCdiConfigurer extends AbstractCdiConfiguration {
 		Objects.requireNonNull(configurer);
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
-		if (!executionContext.hasATokenStoreBean(beanManager)) {
+		if (executionContext.hasATokenStoreBean(beanManager)) {
 			TokenStore tokenStore = (TokenStore) Proxy.newProxyInstance(
 				TokenStore.class.getClassLoader(),
 				new Class[] { TokenStore.class },

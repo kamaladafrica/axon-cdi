@@ -17,7 +17,6 @@ import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.saga.repository.SagaStore;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Iterables;
 import com.google.common.collect.Maps;
 
 import it.kamaladafrica.cdi.axonframework.SagaConfiguration;
@@ -28,7 +27,7 @@ public class SagaBeanInfo extends AbstractAnnotatedTypeInfo {
 
 	public interface ParameterizedQualifierType {
 
-		Type parameterizedType();
+		Type parameterizedType(Class<?> sagaType);
 
 	}
 
@@ -37,25 +36,28 @@ public class SagaBeanInfo extends AbstractAnnotatedTypeInfo {
 		DEFAULT(Object.class) {
 
 			@Override
-			public Type parameterizedType() {
-				throw new UnsupportedOperationException("Object class is not parameterized !");
+			public Type parameterizedType(final Class<?> sagaType) {
+				Objects.requireNonNull(sagaType);
+				return clazz;
 			}
 			
 		},
 
 		EVENT_BUS(EventBus.class) {
 
-			public Type parameterizedType() {
-				throw new UnsupportedOperationException("EventBus class is not parameterized !");
+			public Type parameterizedType(final Class<?> sagaType) {
+				Objects.requireNonNull(sagaType);
+				return clazz;
 			}
 			
 		},
 
 		SAGA_STORE(SagaStore.class) {
 
-			public Type parameterizedType() {
-				return TypeUtils.parameterize(SagaStore.class,
-						clazz);
+			public Type parameterizedType(final Class<?> sagaType) {
+				Objects.requireNonNull(sagaType);
+				return TypeUtils.parameterize(clazz,
+						sagaType);
 			}
 			
 		};
@@ -155,45 +157,16 @@ public class SagaBeanInfo extends AbstractAnnotatedTypeInfo {
 		qualifiers.put(type, CdiUtils.qualifiers(beanManager, CdiUtils.isInheritMarker(qualifier) ? fallback : qualifier));
 	}
 
-	public Set<Bean<?>> getBeans(final BeanManager beanManager, final QualifierType qualifierType) {
-		Objects.requireNonNull(beanManager);
-		Objects.requireNonNull(qualifierType);
-		Set<Annotation> qualifierSet = qualifiers(qualifierType);
-		final Annotation[] qualifiers = Iterables.toArray(qualifierSet, Annotation.class);
-		return beanManager.getBeans(qualifierType.clazz, qualifiers);
-	}
-
-	public Set<Bean<?>> getSagaStoreBeans(final BeanManager beanManager) {
-		Objects.requireNonNull(beanManager);
-		Set<Annotation> qualifierSet = qualifiers(QualifierType.SAGA_STORE);
-		final Annotation[] qualifiers = Iterables.toArray(qualifierSet, Annotation.class);
-		return beanManager.getBeans(QualifierType.SAGA_STORE.parameterizedType(), qualifiers);
-	}
-
 	public Bean<?> resolveBean(final BeanManager beanManager, final QualifierType qualifierType) {
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(qualifierType);
-		Set<Bean<?>> beans = getBeans(beanManager, qualifierType);
-		return beanManager.resolve(beans);
-	}
-
-	public Bean<?> resolveSagaStoreBean(final BeanManager beanManager) {
-		Objects.requireNonNull(beanManager);
-		Set<Bean<?>> beans = getSagaStoreBeans(beanManager);
-		return beanManager.resolve(beans);
+		return CdiUtils.getBean(beanManager, qualifierType.parameterizedType(type), qualifiers(qualifierType));
 	}
 
 	public Object getReference(final BeanManager beanManager, final QualifierType qualifierType) {
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(qualifierType);
-		Bean<?> bean = resolveBean(beanManager, qualifierType);
-		return beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(null));
-	}
-
-	public Object getReference(final BeanManager beanManager, final Bean<?> bean) {
-		Objects.requireNonNull(beanManager);
-		Objects.requireNonNull(bean);
-		return beanManager.getReference(bean, bean.getBeanClass(), beanManager.createCreationalContext(null));
+		return CdiUtils.getReference(beanManager, qualifierType.parameterizedType(type), qualifiers(qualifierType));
 	}
 
 	public Class<?> type() {
