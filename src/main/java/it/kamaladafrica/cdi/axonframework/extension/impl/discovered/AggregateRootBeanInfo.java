@@ -91,16 +91,14 @@ public class AggregateRootBeanInfo {
 
 	public boolean isSameContext(final AggregateRootBeanInfo aggregateRootBeanInfo) {
 		Objects.requireNonNull(aggregateRootBeanInfo);
-		return qualifiers.get(QualifierType.DEFAULT).equals(aggregateRootBeanInfo.qualifiers(QualifierType.DEFAULT))
-				&& qualifiers.get(QualifierType.COMMAND_BUS).equals(aggregateRootBeanInfo.qualifiers(QualifierType.COMMAND_BUS))
+		return qualifiers.get(QualifierType.COMMAND_BUS).equals(aggregateRootBeanInfo.qualifiers(QualifierType.COMMAND_BUS))
 				&& qualifiers.get(QualifierType.COMMAND_GATEWAY).equals(aggregateRootBeanInfo.qualifiers(QualifierType.COMMAND_GATEWAY))
 				&& qualifiers.get(QualifierType.EVENT_BUS).equals(aggregateRootBeanInfo.qualifiers(QualifierType.EVENT_BUS));
 	}
 
 	public boolean isSameContext(final SagaBeanInfo sagaBeanInfo) {
 		Objects.requireNonNull(sagaBeanInfo);
-		return qualifiers.get(QualifierType.DEFAULT).equals(sagaBeanInfo.qualifiers(SagaBeanInfo.QualifierType.DEFAULT))
-				&& qualifiers.get(QualifierType.EVENT_BUS).equals(sagaBeanInfo.qualifiers(SagaBeanInfo.QualifierType.EVENT_BUS));
+		return qualifiers.get(QualifierType.EVENT_BUS).equals(sagaBeanInfo.qualifiers(SagaBeanInfo.QualifierType.EVENT_BUS));
 	}
 
 	public boolean isSameContext(final CommandHandlerBeanInfo commandHandlerBeanInfo) {
