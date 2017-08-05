@@ -28,6 +28,7 @@ import org.axonframework.eventsourcing.eventstore.EventStorageEngine;
 import org.axonframework.messaging.correlation.CorrelationDataProvider;
 import org.axonframework.serialization.Serializer;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Preconditions;
 
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.AggregatesRootRepositoriesBeansCreation;
@@ -35,6 +36,7 @@ import it.kamaladafrica.cdi.axonframework.extension.impl.bean.BeanCreationEntryP
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.BeansCreationHandler;
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.CommandGatewayBeanCreation;
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.EventSchedulerBeanCreation;
+import it.kamaladafrica.cdi.axonframework.extension.impl.bean.MetricRegistryBeanCreation;
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.SnapshotterBeanCreation;
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.validation.ApplicationScopedBeanValidator;
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.validation.BeanScopeNotValidException;
@@ -50,6 +52,7 @@ import it.kamaladafrica.cdi.axonframework.extension.impl.configurer.CorrelationD
 import it.kamaladafrica.cdi.axonframework.extension.impl.configurer.EventBusCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.impl.configurer.EventHandlersCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.impl.configurer.EventStorageEngineCdiConfigurer;
+import it.kamaladafrica.cdi.axonframework.extension.impl.configurer.MetricRegistryCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.impl.configurer.ParameterResolverCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.impl.configurer.PlatformTransactionManagerCdiConfigurer;
 import it.kamaladafrica.cdi.axonframework.extension.impl.configurer.ResourceInjectorCdiConfigurer;
@@ -64,6 +67,8 @@ import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.EventHandler
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.ExecutionContext;
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.SagaBeanInfo;
 import it.kamaladafrica.cdi.axonframework.support.AxonUtils;
+import it.kamaladafrica.cdi.axonframework.support.BeforeStartingAxon;
+import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
 
 /**
  * Original: SpringAxonAutoConfigurer
@@ -150,7 +155,19 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 									new ApplicationScopedBeanValidator(
 										new ApplicationScopedBeanValidator(
 											new ApplicationScopedBeanValidator(
-												new BeanScopeValidatorEntryPoint(), CommandBus.class), CommandGateway.class), EventBus.class), SnapshotTriggerDefinition.class), TokenStore.class), TransactionManager.class), Serializer.class),EventStorageEngine.class), EventScheduler.class), CorrelationDataProvider.class); 
+												new ApplicationScopedBeanValidator(
+													new BeanScopeValidatorEntryPoint(),
+														CommandBus.class),
+															CommandGateway.class),
+																EventBus.class),
+																	SnapshotTriggerDefinition.class),
+																		TokenStore.class),
+																			TransactionManager.class),
+																				Serializer.class),
+																					EventStorageEngine.class),
+																						EventScheduler.class),
+																							CorrelationDataProvider.class),
+																								MetricRegistry.class); 
 		;
 		for (SagaBeanInfo sagaBeanInfo : sagaBeanInfos) {
 			beanScopeValidator = new DependentScopedBeanValidator(beanScopeValidator, sagaBeanInfo.type());
@@ -183,7 +200,7 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 		// Create and setup configurer for each context
 		for (ExecutionContext executionContext : executionContexts) {
 			AxonCdiConfigurer axonCdiConfiguration =
-				new SnapshotterTriggerDefinitionCdiConfigurer(
+				new MetricRegistryCdiConfigurer(
 					new EventHandlersCdiConfigurer(
 						new CommandHandlersCdiConfigurer(
 							new SagaConfigurationsCdiConfigurer(
@@ -198,17 +215,19 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 																new EventStorageEngineCdiConfigurer(
 																	new CommandBusCdiConfigurer(
 																		new ParameterResolverCdiConfigurer(
-																			new AxonCdiConfigurationEntryPoint())))))))))))))));
+																			new SnapshotterTriggerDefinitionCdiConfigurer(
+																				new AxonCdiConfigurationEntryPoint()))))))))))))))));
 			Configurer configurer = axonCdiConfiguration.setUp(DefaultConfigurer.defaultConfiguration(), beanManager, executionContext);
 			// create *configuration* from previous setup configurer
 			Configuration configuration = configurer.buildConfiguration();
 			// Create cdi bean from configuration (repositories, event handlers, command handlers, event schedulers, command gateway)
 			BeansCreationHandler beansCreation =
-				new SnapshotterBeanCreation(
-					new CommandGatewayBeanCreation(
-						new EventSchedulerBeanCreation(
-							new AggregatesRootRepositoriesBeansCreation(
-									new BeanCreationEntryPoint()))));
+				new MetricRegistryBeanCreation(
+					new SnapshotterBeanCreation(
+						new CommandGatewayBeanCreation(
+							new EventSchedulerBeanCreation(
+								new AggregatesRootRepositoriesBeansCreation(
+									new BeanCreationEntryPoint())))));
 			beansCreation.create(afterBeanDiscovery, beanManager, executionContext, configuration);
 			configurations.add(configuration);
 		}
@@ -221,6 +240,10 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 	 */
 	void afterDeploymentValidation(@Observes final AfterDeploymentValidation afterDeploymentValidation, final BeanManager beanManager) {
 		LOGGER.log(Level.INFO, "Axon CDI Extension - Starting");
+		if (CdiUtils.getBean(beanManager, BeforeStartingAxon.class) != null) {
+			BeforeStartingAxon beforeStartingAxon = (BeforeStartingAxon) CdiUtils.getReference(beanManager, BeforeStartingAxon.class);
+			beforeStartingAxon.execute();
+		}
 		configurations.stream().forEach(configuration -> configuration.start());
 		LOGGER.log(Level.INFO, "Axon CDI Extension - Started");
 	}

@@ -37,14 +37,14 @@ public class EventSchedulerBeanCreation extends AbstractBeansCreationHandler {
 				.qualifiers(executionContext.eventSchedulerQualifiers())
 				.types(EventScheduler.class)
 				.beanLifecycle(
-					new SimpleEventSchedulerContextualLifecycle<EventScheduler>(configuration));
+					new SimpleEventSchedulerContextualLifecycle(configuration));
 			Bean<?> newEventSchedulerBeanToAdd = builder.create();
 			return Collections.singleton(newEventSchedulerBeanToAdd);
 		}
 		return Collections.<Bean<?>> emptySet();
 	}
 
-	private class SimpleEventSchedulerContextualLifecycle<T extends EventScheduler> implements ContextualLifecycle<T> {
+	private class SimpleEventSchedulerContextualLifecycle implements ContextualLifecycle<EventScheduler> {
 
 		private final Configuration configuration;
 
@@ -53,15 +53,14 @@ public class EventSchedulerBeanCreation extends AbstractBeansCreationHandler {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public T create(final Bean<T> bean, final CreationalContext<T> creationalContext) {
+		public EventScheduler create(final Bean<EventScheduler> bean, final CreationalContext<EventScheduler> creationalContext) {
 			// remember it is a proxy... just a technical detail :)
-			return (T) new SimpleEventScheduler(Executors.newSingleThreadScheduledExecutor(),
+			return (EventScheduler) new SimpleEventScheduler(Executors.newSingleThreadScheduledExecutor(),
 					configuration.eventBus());
 		}
 
 		@Override
-		public void destroy(final Bean<T> bean, final T instance, final CreationalContext<T> creationalContext) {
+		public void destroy(final Bean<EventScheduler> bean, final EventScheduler instance, final CreationalContext<EventScheduler> creationalContext) {
 			creationalContext.release();
 		}
 

@@ -29,7 +29,7 @@ public class EventStorageEngineCdiConfigurer extends AbstractCdiConfiguration {
 				new Class[] { EventStorageEngine.class },
 				new EventStorageEngineInvocationHandler(beanManager, executionContext));
 			// only one can be registered by configurer
-			configurer.configureEmbeddedEventStore(c -> eventStorageEngine);
+			configurer.configureEmbeddedEventStore(c -> eventStorageEngine);			
 		}
 	}
 

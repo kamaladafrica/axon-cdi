@@ -45,12 +45,12 @@ public class SnapshotterBeanCreation extends AbstractBeansCreationHandler {
 			.qualifiers(executionContext.snapshotterTriggerDefinitionQualifiers())
 			.types(Snapshotter.class)
 			.beanLifecycle(
-				new AggregateSnapshotterContextualLifecycle<Snapshotter>(executionContext, configuration));
+				new AggregateSnapshotterContextualLifecycle(executionContext, configuration));
 		Bean<?> snapshotterBean = builder.create();
 		return Collections.singleton(snapshotterBean);
 	}
 
-	private class AggregateSnapshotterContextualLifecycle<T extends Snapshotter> implements ContextualLifecycle<T> {
+	private class AggregateSnapshotterContextualLifecycle implements ContextualLifecycle<Snapshotter> {
 
 		private final ExecutionContext executionContext;
 		private final Configuration configuration;
@@ -61,8 +61,7 @@ public class SnapshotterBeanCreation extends AbstractBeansCreationHandler {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public T create(final Bean<T> bean, final CreationalContext<T> creationalContext) {
+		public Snapshotter create(final Bean<Snapshotter> bean, final CreationalContext<Snapshotter> creationalContext) {
 			// putain, pourquoi dans la conf il n'expose pas les differents repository disponibles ... ce serait tellement plus simple...
 			List<AggregateFactory<?>> aggregateFactories = executionContext.aggregateRootBeanInfos()
 				.stream()
@@ -75,11 +74,11 @@ public class SnapshotterBeanCreation extends AbstractBeansCreationHandler {
 					}
 
 				}).collect(Collectors.toList());
-			return (T) new AggregateSnapshotter(configuration.eventStore(), aggregateFactories);
+			return (Snapshotter) new AggregateSnapshotter(configuration.eventStore(), aggregateFactories);
 		}
 
 		@Override
-		public void destroy(final Bean<T> bean, final T instance, final CreationalContext<T> creationalContext) {
+		public void destroy(final Bean<Snapshotter> bean, final Snapshotter instance, final CreationalContext<Snapshotter> creationalContext) {
 			creationalContext.release();
 		}
 

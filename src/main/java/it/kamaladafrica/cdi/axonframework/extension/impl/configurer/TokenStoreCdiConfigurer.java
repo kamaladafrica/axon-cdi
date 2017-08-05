@@ -2,7 +2,6 @@ package it.kamaladafrica.cdi.axonframework.extension.impl.configurer;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.Objects;
 
 import javax.enterprise.inject.spi.BeanManager;
@@ -11,6 +10,9 @@ import org.axonframework.config.Configurer;
 import org.axonframework.eventhandling.tokenstore.TokenStore;
 
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.ExecutionContext;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.implementation.InvocationHandlerAdapter;
+import net.bytebuddy.matcher.ElementMatchers;
 
 public class TokenStoreCdiConfigurer extends AbstractCdiConfiguration {
 
@@ -24,12 +26,15 @@ public class TokenStoreCdiConfigurer extends AbstractCdiConfiguration {
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
 		if (executionContext.hasATokenStoreBean(beanManager)) {
-			TokenStore tokenStore = (TokenStore) Proxy.newProxyInstance(
-				TokenStore.class.getClassLoader(),
-				new Class[] { TokenStore.class },
-				new TokenStoreInvocationHandler(beanManager, executionContext));
-			// only one can be registered per configurer
-			configurer.registerComponent(TokenStore.class, c -> tokenStore);
+			Class<? extends TokenStore> proxyTokenStore = new ByteBuddy()
+				.subclass(TokenStore.class)
+				.method(ElementMatchers.any())
+				.intercept(InvocationHandlerAdapter.of(new TokenStoreInvocationHandler(beanManager, executionContext)))
+				.make()
+				.load(TokenStore.class.getClassLoader())
+				.getLoaded();
+			TokenStore instanceTokenStore = proxyTokenStore.newInstance();
+			configurer.registerComponent(TokenStore.class, c -> instanceTokenStore);
 		}
 	}
 

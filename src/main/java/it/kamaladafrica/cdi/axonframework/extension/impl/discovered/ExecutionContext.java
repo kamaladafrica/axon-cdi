@@ -18,6 +18,8 @@ import org.axonframework.eventsourcing.eventstore.EventStore;
 import org.axonframework.messaging.correlation.CorrelationDataProvider;
 import org.axonframework.serialization.Serializer;
 
+import com.codahale.metrics.MetricRegistry;
+
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.AggregateRootBeanInfo.QualifierType;
 
 public class ExecutionContext {
@@ -30,9 +32,12 @@ public class ExecutionContext {
 
 	private List<EventHandlerBeanInfo> eventHandlerBeanInfos = new ArrayList<>();
 
+	private final MetricRegistry metricRegistry;
+
 	public ExecutionContext(final AggregateRootBeanInfo aggregateRootBeanInfo) {
 		Objects.requireNonNull(aggregateRootBeanInfo);
 		this.aggregateRootBeanInfos.add(aggregateRootBeanInfo);
+		this.metricRegistry = new MetricRegistry();
 	}
 
 	public boolean registerIfSameContext(final AggregateRootBeanInfo aggregateRootBeanInfo) {
@@ -187,6 +192,10 @@ public class ExecutionContext {
 	public CorrelationDataProvider getCorrelationDataProviderReference(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
 		return (CorrelationDataProvider) aggregateRootBeanInfos.get(0).getReference(beanManager, QualifierType.CORRELATION_DATA_PROVIDER);
+	}
+
+	public MetricRegistry metricRegistry() {
+		return metricRegistry;
 	}
 
 }

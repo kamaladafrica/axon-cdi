@@ -35,14 +35,14 @@ public class CommandGatewayBeanCreation extends AbstractBeansCreationHandler {
 					.types(CommandGateway.class)
 					.scope(ApplicationScoped.class)
 					.beanLifecycle(
-						new CommandGatewayContextualLifeCycle<CommandGateway>(configuration));
+						new CommandGatewayContextualLifeCycle(configuration));
 			Bean<?> newCommandGatewayBeanToAdd = builder.create();
 			return Collections.singleton(newCommandGatewayBeanToAdd);
 		}
 		return Collections.<Bean<?>> emptySet();
 	}
 
-	private class CommandGatewayContextualLifeCycle<T extends CommandGateway> implements ContextualLifecycle<T> {
+	private class CommandGatewayContextualLifeCycle implements ContextualLifecycle<CommandGateway> {
 
 		private final Configuration configuration;
 
@@ -51,13 +51,12 @@ public class CommandGatewayBeanCreation extends AbstractBeansCreationHandler {
 		}
 
 		@Override
-		@SuppressWarnings("unchecked")
-		public T create(final Bean<T> bean, final CreationalContext<T> creationalContext) {
-			return (T) configuration.commandGateway();
+		public CommandGateway create(final Bean<CommandGateway> bean, final CreationalContext<CommandGateway> creationalContext) {
+			return (CommandGateway) configuration.commandGateway();
 		}
 
 		@Override
-		public void destroy(final Bean<T> bean, final T instance, final CreationalContext<T> creationalContext) {
+		public void destroy(final Bean<CommandGateway> bean, final CommandGateway instance, final CreationalContext<CommandGateway> creationalContext) {
 			creationalContext.release();
 		}
 

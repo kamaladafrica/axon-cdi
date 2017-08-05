@@ -8,3 +8,4 @@ target/
 .factorypath
 .DS_Store
 .*._trace
+/bin/
