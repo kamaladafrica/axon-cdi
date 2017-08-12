@@ -68,7 +68,6 @@ import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.ExecutionCon
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.SagaBeanInfo;
 import it.kamaladafrica.cdi.axonframework.support.AxonUtils;
 import it.kamaladafrica.cdi.axonframework.support.BeforeStartingAxon;
-import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
 
 /**
  * Original: SpringAxonAutoConfigurer
@@ -125,9 +124,9 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 	<X> void processCommandsAndEventsHandlerBeanAnnotatedTypes(
 			@Observes final ProcessAnnotatedType<X> processAnnotatedType, final BeanManager beanManager) {
 		AnnotatedType<X> annotatedType = processAnnotatedType.getAnnotatedType();
-		boolean isCommandHandler = AxonUtils.isCommandHandler(annotatedType.getJavaClass());
-		boolean isEventHandler = AxonUtils.isEventHandler(annotatedType.getJavaClass());
-		Preconditions.checkArgument(!isEventHandler || !isCommandHandler,
+		boolean isCommandHandler = AxonUtils.isCommandHandlerBean(annotatedType.getJavaClass());
+		boolean isEventHandler = AxonUtils.isEventHandlerBean(annotatedType.getJavaClass());
+		Preconditions.checkArgument((isEventHandler && isCommandHandler) != true,
 				"Provided type cannot be both event and command handler: %s", annotatedType);
 		if (isCommandHandler) {
 			commandHandlerBeanInfos.add(new CommandHandlerBeanInfo(annotatedType));
@@ -240,10 +239,7 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 	 */
 	void afterDeploymentValidation(@Observes final AfterDeploymentValidation afterDeploymentValidation, final BeanManager beanManager) {
 		LOGGER.log(Level.INFO, "Axon CDI Extension - Starting");
-		if (CdiUtils.getBean(beanManager, BeforeStartingAxon.class) != null) {
-			BeforeStartingAxon beforeStartingAxon = (BeforeStartingAxon) CdiUtils.getReference(beanManager, BeforeStartingAxon.class);
-			beforeStartingAxon.execute();
-		}
+		beanManager.fireEvent(new BeforeStartingAxon());
 		configurations.stream().forEach(configuration -> configuration.start());
 		LOGGER.log(Level.INFO, "Axon CDI Extension - Started");
 	}

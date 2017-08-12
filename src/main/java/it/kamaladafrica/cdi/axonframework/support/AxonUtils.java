@@ -11,7 +11,6 @@ import javax.enterprise.util.TypeLiteral;
 
 import org.apache.deltaspike.core.util.ExceptionUtils;
 import org.axonframework.commandhandling.CommandBus;
-import org.axonframework.commandhandling.CommandHandler;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.commandhandling.model.AggregateRoot;
 import org.axonframework.eventhandling.EventBus;
@@ -35,8 +34,8 @@ public class AxonUtils {
 				&& !Modifier.isAbstract(targetClass.getModifiers());
 	}
 
-	public static boolean isCommandHandler(final Class<?> targetClass) {
-		return isNotCommandHandlerSubclass(targetClass) && hasCommandHandlerMethod(targetClass);
+	public static boolean isCommandHandlerBean(final Class<?> targetClass) {
+		return isNotAggregateRoot(targetClass) && hasCommandHandlerMethod(targetClass);
 	}
 
 	public static boolean isCommandBus(final Class<?> targetClass) {
@@ -49,7 +48,7 @@ public class AxonUtils {
 				&& !Modifier.isAbstract(targetClass.getModifiers());
 	}
 
-	public static boolean isEventHandler(final Class<?> targetClass) {
+	public static boolean isEventHandlerBean(final Class<?> targetClass) {
 		return isNotAggregateRoot(targetClass) && isNotEventHandlerSubclass(targetClass)
 				&& hasEventHandlerMethod(targetClass);
 	}
@@ -61,11 +60,6 @@ public class AxonUtils {
 
 	public static boolean isCommandGateway(final Class<?> targetClass) {
 		return CommandGateway.class.isAssignableFrom(targetClass);
-	}
-
-	public static boolean isNotCommandHandlerSubclass(final Class<?> beanClass) {
-		return !CommandHandler.class.isAssignableFrom(beanClass)
-				&& !AggregateRoot.class.isAssignableFrom(beanClass);
 	}
 
 	public static boolean hasCommandHandlerMethod(final Class<?> beanClass) {

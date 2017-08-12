@@ -10,7 +10,7 @@ public class CommandHandlerBeanInfo extends AbstractAnnotatedTypeInfo {
 
 	public CommandHandlerBeanInfo(final AnnotatedType<?> annotatedType) {
 		super(annotatedType);
-		Preconditions.checkArgument(AxonUtils.isCommandHandler(annotatedType.getJavaClass()),
+		Preconditions.checkArgument(AxonUtils.isCommandHandlerBean(annotatedType.getJavaClass()),
 				"Bean is not an command handler: " + annotatedType.getJavaClass().getName());
 	}
 

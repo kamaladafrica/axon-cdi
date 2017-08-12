@@ -41,6 +41,7 @@ public class CommandHandlersCdiConfigurer extends AbstractCdiConfiguration {
 			Object instanceCommandHandler = proxyCommandHandler.newInstance();
 			configurer.registerCommandHandler(c -> instanceCommandHandler);
 		}
+
 	}
 
 	private class CommandHandlerInvocationHandler implements InvocationHandler {

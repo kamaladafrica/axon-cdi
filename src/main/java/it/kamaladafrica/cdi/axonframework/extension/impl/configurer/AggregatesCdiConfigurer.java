@@ -28,8 +28,6 @@ public class AggregatesCdiConfigurer extends AbstractCdiConfiguration {
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
 		
-//		Type type = TypeUtils.parameterize(Repository.class,
-//				aggregateRootBeanInfo.type());
 		for (AggregateRootBeanInfo aggregateRootBeanInfo : executionContext.aggregateRootBeanInfos()) {
 			AggregateConfigurer aggregateConf = AggregateConfigurer.defaultConfiguration(aggregateRootBeanInfo.type());
 			aggregateConf.configureCommandHandler(new Function<Configuration, AggregateAnnotationCommandHandler<?>>() {
@@ -43,11 +41,13 @@ public class AggregatesCdiConfigurer extends AbstractCdiConfiguration {
 				}
 
 			});
-
-//		aggregateConf.configureAggregateFactory(aggregateFactoryBuilder);
-//		aggregateConf.configureCommandHandler(aggregateCommandHandlerBuilder)
 			configurer.configureAggregate(aggregateConf);
 		}
+		
+//		for (AggregateRootBeanInfo aggregateRootBeanInfo : executionContext.aggregateRootBeanInfos()) {
+//			final AggregateConfigurer aggregateConf = AggregateConfigurer.defaultConfiguration(aggregateRootBeanInfo.type());
+//			configurer.configureAggregate(aggregateConf);
+//		}
 	}
 
 }
