@@ -70,7 +70,7 @@ public class AxonUtils {
 	}
 
 	public static boolean isNotAggregateRoot(final Class<?> targetClass) {
-		return !AggregateRoot.class.isAssignableFrom(targetClass);
+		return !targetClass.isAnnotationPresent(AggregateRoot.class);
 	}
 
 	public static boolean isNotEventHandlerSubclass(final Class<?> beanClass) {

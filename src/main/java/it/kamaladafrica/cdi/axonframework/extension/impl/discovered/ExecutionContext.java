@@ -9,7 +9,9 @@ import java.util.Set;
 
 import javax.enterprise.inject.spi.BeanManager;
 
+import org.apache.commons.lang3.Validate;
 import org.axonframework.commandhandling.CommandBus;
+import org.axonframework.commandhandling.model.AggregateRoot;
 import org.axonframework.common.transaction.TransactionManager;
 import org.axonframework.eventhandling.tokenstore.TokenStore;
 import org.axonframework.eventsourcing.SnapshotTriggerDefinition;
@@ -60,6 +62,7 @@ public class ExecutionContext {
 
 	public boolean registerIfSameContext(final CommandHandlerBeanInfo commandHandlerBeanInfo) {
 		Objects.requireNonNull(commandHandlerBeanInfo);
+		Validate.validState(!commandHandlerBeanInfo.annotatedType().isAnnotationPresent(AggregateRoot.class), "Un aggregat n'est pas un bean command handler !!!");
 		if (aggregateRootBeanInfos.get(0).isSameContext(commandHandlerBeanInfo)) {
 			commandHandlerBeanInfos.add(commandHandlerBeanInfo);
 			return true;
