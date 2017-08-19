@@ -6,9 +6,9 @@ import java.util.Objects;
 
 import javax.enterprise.inject.spi.BeanManager;
 
-import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.config.Configurer;
 
+import it.kamaladafrica.cdi.axonframework.extension.impl.bean.commandbus.CommandBusProxified;
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.ExecutionContext;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.implementation.InvocationHandlerAdapter;
@@ -26,14 +26,14 @@ public class CommandBusCdiConfigurer extends AbstractCdiConfiguration {
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
 		if (executionContext.hasACommandBusBean(beanManager)) {
-			Class<? extends CommandBus> proxyCommandBus = new ByteBuddy()
-					.subclass(CommandBus.class)
+			Class<? extends CommandBusProxified> proxyCommandBus = new ByteBuddy()
+					.subclass(CommandBusProxified.class)
 					.method(ElementMatchers.any())
 					.intercept(InvocationHandlerAdapter.of(new CommandBusInvocationHandler(beanManager, executionContext)))
 					.make()
-					.load(CommandBus.class.getClassLoader())
+					.load(CommandBusProxified.class.getClassLoader())
 					.getLoaded();
-			CommandBus instanceCommandBus = proxyCommandBus.newInstance();
+			CommandBusProxified instanceCommandBus = proxyCommandBus.newInstance();
 			configurer.configureCommandBus(c -> instanceCommandBus);
 		}
 	}
@@ -42,17 +42,22 @@ public class CommandBusCdiConfigurer extends AbstractCdiConfiguration {
 
 		private final BeanManager beanManager;
 		private final ExecutionContext executionContext;
-		private CommandBus commandBus;
+		private final Method toStringMethod;
+		private CommandBusProxified commandBus;
 
-		public CommandBusInvocationHandler(final BeanManager beanManager, final ExecutionContext executionContext) {
+		public CommandBusInvocationHandler(final BeanManager beanManager, final ExecutionContext executionContext) throws NoSuchMethodException, SecurityException {
 			this.beanManager = Objects.requireNonNull(beanManager);
 			this.executionContext = Objects.requireNonNull(executionContext);
+			this.toStringMethod = Object.class.getMethod("toString");
 		}
 
 		@Override
 		public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
 			if (commandBus == null) {
 				commandBus = executionContext.getCommandBusReference(beanManager);
+			}
+			if (method.equals(toStringMethod)) {
+				return CommandBusProxified.class.getName();
 			}
 			return method.invoke(commandBus, args);
 		}

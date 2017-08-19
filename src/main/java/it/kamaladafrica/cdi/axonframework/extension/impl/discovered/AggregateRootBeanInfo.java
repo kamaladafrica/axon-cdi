@@ -12,7 +12,6 @@ import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 
-import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.common.transaction.TransactionManager;
 import org.axonframework.eventhandling.EventBus;
@@ -29,13 +28,14 @@ import com.google.common.collect.Maps;
 import it.kamaladafrica.cdi.axonframework.AggregateConfiguration;
 import it.kamaladafrica.cdi.axonframework.support.AxonUtils;
 import it.kamaladafrica.cdi.axonframework.support.CdiUtils;
+import it.kamaladafrica.cdi.axonframework.extension.impl.bean.commandbus.CommandBusProxified;
 
 public class AggregateRootBeanInfo {
 
 	public static enum QualifierType {
 
 		DEFAULT(Object.class),
-		COMMAND_BUS(CommandBus.class),
+		COMMAND_BUS(CommandBusProxified.class),
 		COMMAND_GATEWAY(CommandGateway.class),
 		EVENT_BUS(EventBus.class),
 		SNAPSHOTTER_TRIGGER_DEFINITION(SnapshotTriggerDefinition.class),

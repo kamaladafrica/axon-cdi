@@ -7,7 +7,6 @@ import javax.enterprise.inject.spi.BeanManager;
 
 import org.axonframework.commandhandling.AggregateAnnotationCommandHandler;
 import org.axonframework.commandhandling.AnnotationCommandTargetResolver;
-import org.axonframework.config.AggregateConfigurer;
 import org.axonframework.config.Configuration;
 import org.axonframework.config.Configurer;
 
@@ -15,6 +14,7 @@ import it.kamaladafrica.cdi.axonframework.aggregate.CustomAggregateAnnotationCom
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.AggregateRootBeanInfo;
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.ExecutionContext;
 
+// order of call is very important
 public class AggregatesCdiConfigurer extends AbstractCdiConfiguration {
 
 	public AggregatesCdiConfigurer(final AxonCdiConfigurer original) {
@@ -29,7 +29,7 @@ public class AggregatesCdiConfigurer extends AbstractCdiConfiguration {
 		Objects.requireNonNull(executionContext);
 		
 		for (AggregateRootBeanInfo aggregateRootBeanInfo : executionContext.aggregateRootBeanInfos()) {
-			AggregateConfigurer aggregateConf = AggregateConfigurer.defaultConfiguration(aggregateRootBeanInfo.type());
+			AggregateConfigurerUsingProxies aggregateConf = AggregateConfigurerUsingProxies.defaultConfiguration(aggregateRootBeanInfo.type());
 			aggregateConf.configureCommandHandler(new Function<Configuration, AggregateAnnotationCommandHandler<?>>() {
 
 				@Override
@@ -43,11 +43,6 @@ public class AggregatesCdiConfigurer extends AbstractCdiConfiguration {
 			});
 			configurer.configureAggregate(aggregateConf);
 		}
-		
-//		for (AggregateRootBeanInfo aggregateRootBeanInfo : executionContext.aggregateRootBeanInfos()) {
-//			final AggregateConfigurer aggregateConf = AggregateConfigurer.defaultConfiguration(aggregateRootBeanInfo.type());
-//			configurer.configureAggregate(aggregateConf);
-//		}
 	}
 
 }

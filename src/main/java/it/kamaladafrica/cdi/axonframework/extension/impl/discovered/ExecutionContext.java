@@ -10,7 +10,6 @@ import java.util.Set;
 import javax.enterprise.inject.spi.BeanManager;
 
 import org.apache.commons.lang3.Validate;
-import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.model.AggregateRoot;
 import org.axonframework.common.transaction.TransactionManager;
 import org.axonframework.eventhandling.tokenstore.TokenStore;
@@ -22,6 +21,7 @@ import org.axonframework.serialization.Serializer;
 
 import com.codahale.metrics.MetricRegistry;
 
+import it.kamaladafrica.cdi.axonframework.extension.impl.bean.commandbus.CommandBusProxified;
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.AggregateRootBeanInfo.QualifierType;
 
 public class ExecutionContext {
@@ -156,9 +156,9 @@ public class ExecutionContext {
 		return aggregateRootBeanInfos.get(0).hasBean(beanManager, QualifierType.CORRELATION_DATA_PROVIDER);
 	}
 
-	public CommandBus getCommandBusReference(final BeanManager beanManager) {
+	public CommandBusProxified getCommandBusReference(final BeanManager beanManager) {
 		Objects.requireNonNull(beanManager);
-		return (CommandBus) aggregateRootBeanInfos.get(0).getReference(beanManager, QualifierType.COMMAND_BUS);
+		return (CommandBusProxified) aggregateRootBeanInfos.get(0).getReference(beanManager, QualifierType.COMMAND_BUS);
 	}
 
 	// EventStore extends EventBus

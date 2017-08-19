@@ -201,19 +201,19 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 		for (ExecutionContext executionContext : executionContexts) {
 			AxonCdiConfigurer axonCdiConfiguration =
 				new MetricRegistryCdiConfigurer(
-					new EventHandlersCdiConfigurer(
+					new AggregatesCdiConfigurer(
 						new CommandHandlersCdiConfigurer(
 							new SagaConfigurationsCdiConfigurer(
-								new AggregatesCdiConfigurer(
+								new EventHandlersCdiConfigurer(
 									new CorrelationDataProviderCdiConfigurer(
 										new ResourceInjectorCdiConfigurer(
 											new TransactionManagerCdiConfigurer(
 												new PlatformTransactionManagerCdiConfigurer(
 													new TokenStoreCdiConfigurer(
 														new SerializerCdiConfigurer(
-															new EventBusCdiConfigurer(
+															new CommandBusCdiConfigurer(
 																new EventStorageEngineCdiConfigurer(
-																	new CommandBusCdiConfigurer(
+																	new EventBusCdiConfigurer(
 																		new ParameterResolverCdiConfigurer(
 																			new SnapshotterTriggerDefinitionCdiConfigurer(
 																				new AxonCdiConfigurationEntryPoint()))))))))))))))));

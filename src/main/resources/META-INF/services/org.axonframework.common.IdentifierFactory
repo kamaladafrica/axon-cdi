@@ -1,1 +1,2 @@
-it.kamaladafrica.cdi.axonframework.extension.EaioIdentifierFactory
+# Error when deploying in wildfly swarm :(
+#it.kamaladafrica.cdi.axonframework.extension.EaioIdentifierFactory
