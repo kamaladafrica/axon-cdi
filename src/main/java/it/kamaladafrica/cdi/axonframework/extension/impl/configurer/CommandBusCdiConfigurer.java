@@ -2,7 +2,6 @@ package it.kamaladafrica.cdi.axonframework.extension.impl.configurer;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
 import java.util.Objects;
 
 import javax.enterprise.inject.spi.BeanManager;
@@ -11,6 +10,9 @@ import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.config.Configurer;
 
 import it.kamaladafrica.cdi.axonframework.extension.impl.discovered.ExecutionContext;
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.implementation.InvocationHandlerAdapter;
+import net.bytebuddy.matcher.ElementMatchers;
 
 public class CommandBusCdiConfigurer extends AbstractCdiConfiguration {
 
@@ -24,12 +26,15 @@ public class CommandBusCdiConfigurer extends AbstractCdiConfiguration {
 		Objects.requireNonNull(beanManager);
 		Objects.requireNonNull(executionContext);
 		if (executionContext.hasACommandBusBean(beanManager)) {
-			CommandBus commandBus = (CommandBus) Proxy.newProxyInstance(
-				CommandBus.class.getClassLoader(),
-				new Class[] { CommandBus.class },
-				new CommandBusInvocationHandler(beanManager, executionContext));
-			// only one can be registered per configurer
-			configurer.configureCommandBus(c -> commandBus);
+			Class<? extends CommandBus> proxyCommandBus = new ByteBuddy()
+					.subclass(CommandBus.class)
+					.method(ElementMatchers.any())
+					.intercept(InvocationHandlerAdapter.of(new CommandBusInvocationHandler(beanManager, executionContext)))
+					.make()
+					.load(CommandBus.class.getClassLoader())
+					.getLoaded();
+			CommandBus instanceCommandBus = proxyCommandBus.newInstance();
+			configurer.configureCommandBus(c -> instanceCommandBus);
 		}
 	}
 

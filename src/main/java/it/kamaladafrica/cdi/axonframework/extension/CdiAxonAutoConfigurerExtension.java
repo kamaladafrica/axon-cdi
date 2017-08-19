@@ -36,6 +36,7 @@ import it.kamaladafrica.cdi.axonframework.extension.impl.bean.BeanCreationEntryP
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.BeansCreationHandler;
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.CommandGatewayBeanCreation;
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.EventSchedulerBeanCreation;
+import it.kamaladafrica.cdi.axonframework.extension.impl.bean.EventStoreBeanCreation;
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.MetricRegistryBeanCreation;
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.SnapshotterBeanCreation;
 import it.kamaladafrica.cdi.axonframework.extension.impl.bean.validation.ApplicationScopedBeanValidator;
@@ -226,7 +227,8 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 						new CommandGatewayBeanCreation(
 							new EventSchedulerBeanCreation(
 								new AggregatesRootRepositoriesBeansCreation(
-									new BeanCreationEntryPoint())))));
+									new EventStoreBeanCreation(
+										new BeanCreationEntryPoint()))))));
 			beansCreation.create(afterBeanDiscovery, beanManager, executionContext, configuration);
 			configurations.add(configuration);
 		}
