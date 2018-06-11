@@ -3,13 +3,25 @@ package it.kamaladafrica.cdi.axonframework.aggregate;
 import java.util.function.Function;
 
 import org.axonframework.commandhandling.AggregateAnnotationCommandHandler;
+import org.axonframework.commandhandling.AnnotationCommandTargetResolver;
 import org.axonframework.commandhandling.CommandMessage;
 import org.axonframework.commandhandling.CommandTargetResolver;
 import org.axonframework.commandhandling.model.Aggregate;
 import org.axonframework.commandhandling.model.Repository;
+import org.axonframework.messaging.annotation.ClasspathParameterResolverFactory;
 import org.axonframework.messaging.annotation.ParameterResolverFactory;
 
 public class CustomAggregateAnnotationCommandHandler<T> extends AggregateAnnotationCommandHandler<T> {
+
+	public CustomAggregateAnnotationCommandHandler(final Class<T> aggregateType, final Repository<T> repository) {
+		this(aggregateType, repository, new AnnotationCommandTargetResolver());
+	}
+
+	public CustomAggregateAnnotationCommandHandler(final Class<T> aggregateType, final Repository<T> repository,
+			CommandTargetResolver commandTargetResolver) {
+		this(aggregateType, repository, commandTargetResolver,
+				ClasspathParameterResolverFactory.forClass(aggregateType));
+	}
 
 	public CustomAggregateAnnotationCommandHandler(final Class<T> aggregateType,
 			final Repository<T> repository,
@@ -31,6 +43,6 @@ public class CustomAggregateAnnotationCommandHandler<T> extends AggregateAnnotat
 			}
 
 		});
-    }
+	}
 
 }
