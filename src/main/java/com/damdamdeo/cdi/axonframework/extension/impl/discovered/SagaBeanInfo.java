@@ -7,11 +7,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 
+import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.axonframework.eventhandling.EventBus;
 import org.axonframework.eventhandling.saga.repository.SagaStore;
@@ -19,8 +21,6 @@ import org.axonframework.eventhandling.saga.repository.SagaStore;
 import com.damdamdeo.cdi.axonframework.SagaConfiguration;
 import com.damdamdeo.cdi.axonframework.support.AxonUtils;
 import com.damdamdeo.cdi.axonframework.support.CdiUtils;
-import com.google.common.base.Preconditions;
-import com.google.common.collect.Maps;
 
 public class SagaBeanInfo extends AbstractAnnotatedTypeInfo {
 
@@ -77,7 +77,7 @@ public class SagaBeanInfo extends AbstractAnnotatedTypeInfo {
 
 	public SagaBeanInfo(final AnnotatedType<?> annotatedType, final Map<QualifierType, Set<Annotation>> qualifiers) {
 		super(annotatedType);
-		Preconditions.checkArgument(AxonUtils.isAnnotatedSaga(annotatedType.getJavaClass()),
+		Validate.validState(AxonUtils.isAnnotatedSaga(annotatedType.getJavaClass()),
 				"Bean is not a saga: " + annotatedType.getJavaClass().getName());
 		this.annotatedType = Objects.requireNonNull(annotatedType);
 		this.type = annotatedType.getJavaClass();
@@ -113,7 +113,8 @@ public class SagaBeanInfo extends AbstractAnnotatedTypeInfo {
 		Objects.requireNonNull(annotatedType);
 		Map<QualifierType, Set<Annotation>> qualifiers = new HashMap<>();
 		SagaConfiguration sagaConfiguration = CdiUtils.findAnnotation(beanManager,
-				annotatedType.getAnnotations(), SagaConfiguration.class);
+				annotatedType.getAnnotations().toArray(new Annotation[annotatedType.getAnnotations().size()]),
+				SagaConfiguration.class);
 		if (sagaConfiguration != null) {
 			qualifiers.putAll(
 					extractQualifiers(beanManager, sagaConfiguration, annotatedType.getJavaClass()));
@@ -129,7 +130,10 @@ public class SagaBeanInfo extends AbstractAnnotatedTypeInfo {
 	private static Map<QualifierType, Set<Annotation>> normalizeQualifiers(
 			final Map<QualifierType, Set<Annotation>> map) {
 		Objects.requireNonNull(map);
-		return Maps.newHashMap(Maps.transformValues(map, NormalizeQualifierFn.INSTANCE));
+		return map.entrySet()
+				.stream()
+				.collect(Collectors.toMap(Map.Entry::getKey,
+						e -> CdiUtils.normalizedQualifiers(e.getValue())));
 	}
 
 	private static Map<? extends QualifierType, ? extends Set<Annotation>> extractQualifiers(

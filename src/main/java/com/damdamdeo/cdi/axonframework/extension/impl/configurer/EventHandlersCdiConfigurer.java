@@ -48,7 +48,8 @@ public class EventHandlersCdiConfigurer extends AbstractCdiConfiguration {
 			// By default a tracking event processor is linked with the full qualified Aggregate
 			// However when replaying event it can failed because order in the store is not respected.
 			// By assigning the same event processor name on all aggregate order will be respected :)
-			eventHandlingConfiguration.byDefaultAssignTo("SAME_AGGREGATE_GROUP");
+//			eventHandlingConfiguration.byDefaultAssignTo("SAME_AGGREGATE_GROUP");
+// passage par @ProcessingGroup
 		}
 		configurer.registerModule(eventHandlingConfiguration);
 	}

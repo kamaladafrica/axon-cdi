@@ -12,6 +12,7 @@ import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.reflect.TypeUtils;
 import org.apache.deltaspike.core.util.bean.BeanBuilder;
 import org.apache.deltaspike.core.util.metadata.builder.ContextualLifecycle;
@@ -22,7 +23,6 @@ import com.damdamdeo.cdi.axonframework.extension.impl.discovered.AggregateRootBe
 import com.damdamdeo.cdi.axonframework.extension.impl.discovered.ExecutionContext;
 import com.damdamdeo.cdi.axonframework.extension.impl.discovered.AggregateRootBeanInfo.QualifierType;
 import com.damdamdeo.cdi.axonframework.support.CdiUtils;
-import com.google.common.base.Strings;
 
 public class AggregatesRootRepositoriesBeansCreation extends AbstractBeansCreationHandler {
 
@@ -69,7 +69,7 @@ public class AggregatesRootRepositoriesBeansCreation extends AbstractBeansCreati
 						.stereotypes(aggregateRootBean.getStereotypes())
 						.beanLifecycle(new RepositoryContextualLifecycle<>(aggregateRootBeanInfo, configuration));
 
-		if (!Strings.isNullOrEmpty(aggregateRootBean.getName())) {
+		if (StringUtils.isNotEmpty(aggregateRootBean.getName())) {
 			builderRepository.name(aggregateRootBean.getName() + "Repository");
 		}
 		Bean<Repository<T>> repositoryBean = builderRepository.create();

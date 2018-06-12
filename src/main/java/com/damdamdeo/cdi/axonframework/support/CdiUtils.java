@@ -3,7 +3,10 @@ package com.damdamdeo.cdi.axonframework.support;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.enterprise.context.spi.CreationalContext;
 import javax.enterprise.inject.Any;
@@ -21,8 +24,6 @@ import org.apache.deltaspike.core.util.HierarchyDiscovery;
 
 import com.damdamdeo.cdi.axonframework.DefaultQualifierMeme;
 import com.damdamdeo.cdi.axonframework.InheritQualifiers;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 
 public final class CdiUtils {
 
@@ -34,13 +35,14 @@ public final class CdiUtils {
 
 	private static final Class<?> INHERIT_MARKER = InheritQualifiers.class;
 
-	private static final Set<Annotation> DEFAULT_QUALIFIERS = ImmutableSet
-			.<Annotation> of(DEFAULT_LITERAL, ANY_LITERAL);
+	private static final Set<Annotation> DEFAULT_QUALIFIERS = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(DEFAULT_LITERAL, ANY_LITERAL)));
 
 	private CdiUtils() {}
 
 	public static Set<Annotation> qualifiers(final BeanManager bm, final Iterable<Annotation> annotations) {
-		return ImmutableSet.copyOf(BeanUtils.getQualifiers(bm, annotations));
+		return BeanUtils.getQualifiers(bm, annotations)
+				.stream()
+				.collect(Collectors.collectingAndThen(Collectors.toSet(), Collections::unmodifiableSet));
 	}
 
 	public static Set<Annotation> qualifiers(final BeanManager bm, final Annotation[] annotations) {
@@ -75,7 +77,9 @@ public final class CdiUtils {
 			}
 			break;
 		}
-		return ImmutableSet.<Annotation> builder().addAll(qualifiers).add(ANY_LITERAL).build();
+		final Set<Annotation> normalizedQualifiers = new HashSet<>(qualifiers);
+		normalizedQualifiers.add(ANY_LITERAL);
+		return Collections.unmodifiableSet(normalizedQualifiers);
 	}
 
 	public static boolean isDefaultMarker(final Class<?> marker) {
@@ -87,7 +91,7 @@ public final class CdiUtils {
 	}
 
 	public static Object getReference(final BeanManager bm, final Type type, final Set<Annotation> qualifiers) {
-		Annotation[] annotations = Iterables.toArray(qualifiers, Annotation.class);
+		Annotation[] annotations = qualifiers.stream().toArray(Annotation[]::new);
 		return getReference(bm, type, annotations);
 	}
 
@@ -103,7 +107,7 @@ public final class CdiUtils {
 	}
 
 	public static Set<Bean<?>> getBeans(final BeanManager bm, final Type type, final Set<Annotation> qualifiers) {
-		Annotation[] annotations = Iterables.toArray(qualifiers, Annotation.class);
+		Annotation[] annotations = qualifiers.stream().toArray(Annotation[]::new);
 		return bm.getBeans(type, annotations);
 	}
 
@@ -112,7 +116,7 @@ public final class CdiUtils {
 	}
 
 	public static Bean<?> getBean(final BeanManager bm, final Type type, final Set<Annotation> qualifiers) {
-		Annotation[] annotations = Iterables.toArray(qualifiers, Annotation.class);
+		Annotation[] annotations = qualifiers.stream().toArray(Annotation[]::new);
 		return getBean(bm, type, annotations);
 	}
 
@@ -156,12 +160,6 @@ public final class CdiUtils {
 			}
 		}
 		return null;
-	}
-
-	public static <T extends Annotation> T findAnnotation(final BeanManager beanManager,
-			final Iterable<Annotation> annotations, final Class<T> targetAnnotationType) {
-		return findAnnotation(beanManager, Iterables.toArray(annotations, Annotation.class),
-				targetAnnotationType);
 	}
 
 }

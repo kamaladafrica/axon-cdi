@@ -14,6 +14,7 @@ import javax.enterprise.inject.spi.BeanManager;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 
+import org.apache.commons.lang3.Validate;
 import org.axonframework.commandhandling.CommandBus;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.common.transaction.TransactionManager;
@@ -67,7 +68,6 @@ import com.damdamdeo.cdi.axonframework.extension.impl.discovered.ExecutionContex
 import com.damdamdeo.cdi.axonframework.extension.impl.discovered.SagaBeanInfo;
 import com.damdamdeo.cdi.axonframework.support.AxonUtils;
 import com.damdamdeo.cdi.axonframework.support.BeforeStartingAxon;
-import com.google.common.base.Preconditions;
 
 /**
  * Original: SpringAxonAutoConfigurer
@@ -126,7 +126,7 @@ public class CdiAxonAutoConfigurerExtension implements Extension {
 		AnnotatedType<X> annotatedType = processAnnotatedType.getAnnotatedType();
 		boolean isCommandHandler = AxonUtils.isCommandHandlerBean(annotatedType.getJavaClass());
 		boolean isEventHandler = AxonUtils.isEventHandlerBean(annotatedType.getJavaClass());
-		Preconditions.checkArgument((isEventHandler && isCommandHandler) != true,
+		Validate.validState((isEventHandler && isCommandHandler) != true,
 				"Provided type cannot be both event and command handler: %s", annotatedType);
 		if (isCommandHandler) {
 			commandHandlerBeanInfos.add(new CommandHandlerBeanInfo(annotatedType));
